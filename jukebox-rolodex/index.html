@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jukebox Rolodex (A–H)</title>
+  <link rel="stylesheet" href="rolodex_AH.css" />
+</head>
+<body>
+
+  <!-- Hamburger lives OUTSIDE the jukebox image area -->
+  <button id="hamburger" class="hamburger" aria-label="Open menu" title="Load songs">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Fullscreen loader modal (starts hidden) -->
+  <div id="loaderModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loaderTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div id="loaderTitle" class="modal-title">Load songs</div>
+          <div class="modal-subtitle">Click a row to choose an MP3 for that slot. The filename becomes the song title (you can edit it).</div>
+        </div>
+        <button id="closeLoader" class="modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-actions">
+        <button id="autoFillByName" class="btn">Auto-assign sequentially (A1…H8)</button>
+        <button id="clearAll" class="btn btn-danger">Clear all slots</button>
+        <div class="modal-note">Saved locally in your browser (IndexedDB)</div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="slot-table">
+          <thead>
+            <tr>
+              <th>Slot</th>
+              <th>Song title</th>
+              <th>File</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="slotRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jukebox image + overlay UI -->
+  <div class="stage">
+    <img class="jukebox-img" src="jukebox.png" alt="Jukebox UI" />
+
+    <div class="overlay">
+      <button class="hotspot" id="pageLeft" aria-label="Flip left"></button>
+      <button class="hotspot" id="pageRight" aria-label="Flip right"></button>
+      <button class="dial-hotspot" id="dial" aria-label="Dial (click left/right to flip)"></button>
+
+      <div class="rolodex">
+        <div class="card-stack" id="stack">
+          <div class="face front" id="front"></div>
+          <div class="face back" id="back"></div>
+        </div>
+      </div>
+
+      <div class="keypad">
+        <div class="keys" id="letters"></div>
+        <div class="keys" id="numbers"></div>
+      </div>
+
+      <div class="nowplaying">
+        <button class="nav-btn" id="prevQueue" aria-label="Previous queued song"></button>
+        <button class="nav-btn" id="nextQueue" aria-label="Next queued song"></button>
+      </div>
+
+      <audio id="audioPlayer"></audio>
+    </div>
+  </div>
+
+  <script defer src="rolodex_AH.js"></script>
+</body>
+</html>

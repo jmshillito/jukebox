@@ -1,0 +1,629 @@
+/* ============================================================
+   Loader + Jukebox overlay (fixed)
+   If you see tiny text / no hamburger styling, this file isn't loading.
+============================================================ */
+
+:root{
+  --card: #f6f0dc;
+  --cardBorder: #c03a3a;
+  --shadow: rgba(0,0,0,.25);
+  --pageBg: #e7e7ea;
+  --modalBg: rgba(0,0,0,.55);
+}
+
+*{ box-sizing: border-box; }
+html, body{ width:100%; height:100%; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--pageBg);
+  font-size: 16px; /* prevents tiny default */
+}
+
+/* ------------------------------------------------------------
+   Hamburger (fixed)
+------------------------------------------------------------ */
+.hamburger{
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.14);
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 10px 22px rgba(0,0,0,.14);
+  display: grid;
+  gap: 7px;
+  align-content: center;
+  justify-items: center;
+  cursor: pointer;
+  z-index: 2000;
+}
+.hamburger span{
+  width: 26px;
+  height: 3px;
+  background: rgba(0,0,0,.78);
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------
+   Modal (hidden by default)
+------------------------------------------------------------ */
+.hidden{ display:none !important; }
+
+.modal{
+  position: fixed;
+  inset: 0;
+  background: var(--modalBg);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 2100;
+}
+
+.modal-card{
+  width: min(1020px, 96vw);
+  max-height: 86vh;
+  background: rgba(255,255,255,.98);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.35);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+}
+
+.modal-header{
+  display:flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 18px 12px 18px;
+  border-bottom: 1px solid rgba(0,0,0,.10);
+}
+.modal-title{ font-weight: 900; font-size: 20px; }
+.modal-subtitle{ margin-top:6px; opacity:.78; font-size:14px; line-height:1.35; }
+
+.modal-close{
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+.modal-close:hover{ background: rgba(0,0,0,.06); }
+
+.modal-actions{
+  padding: 12px 18px 14px 18px;
+  display:flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(0,0,0,.10);
+}
+.modal-note{ margin-left:auto; opacity:.7; font-size:13px; }
+
+.btn{
+  border: 1px solid rgba(0,0,0,.16);
+  background: rgba(255,255,255,.95);
+  padding: 10px 13px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+}
+.btn:hover{ background: rgba(255,255,255,1); }
+.btn-danger{
+  border-color: rgba(180,0,0,.24);
+  background: rgba(255,240,240,.95);
+}
+.btn-danger:hover{ background: rgba(255,230,230,1); }
+
+.table-wrap{ overflow:auto; padding: 12px 18px 18px 18px; }
+
+.slot-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.slot-table th, .slot-table td{
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(0,0,0,.10);
+  text-align: left;
+  vertical-align: middle;
+}
+.slot-table th{
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,.98);
+  z-index: 1;
+  font-size: 12px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  opacity: .75;
+}
+
+.slot-row{ cursor:pointer; }
+.slot-row:hover{ background: rgba(0,0,0,.04); }
+
+.cell-slot{ font-weight: 900; width: 70px; }
+.cell-file{
+  opacity: .78;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+.title-input{
+  width: min(560px, 100%);
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.16);
+  background: rgba(255,255,255,.98);
+  font-weight: 750;
+}
+.row-actions{ display:flex; gap: 8px; justify-content:flex-end; }
+.small{ font-size: 13px; padding: 9px 11px; border-radius: 12px; }
+
+/* ------------------------------------------------------------
+   Stage (centered, unaffected by modal)
+------------------------------------------------------------ */
+.stage{
+  position: relative;
+  width: min(720px, 96vw);
+  margin: 26px auto 30px auto;
+}
+.jukebox-img{
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+.overlay{
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* Hotspots + dial */
+.hotspot, .dial-hotspot{
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  position: absolute;
+  z-index: 200;
+  font-size: 0;
+}
+#pageLeft{  top: 6.6%; left: 27.0%; width: 21.0%; height: 12.5%; }
+#pageRight{ top: 6.6%; left: 52.0%; width: 21.0%; height: 12.5%; }
+#dial{
+  top: 3.0%;
+  left: 28%;
+  width: 36%;
+  height: 15.5%;
+  border-radius: 999px;
+}
+
+/* Rolodex window + cards (same look you had) */
+.rolodex{
+  position:absolute;
+  top: 21.8%;
+  left: 10.5%;
+  width: 79%;
+  height: 38.8%;
+  perspective: 1000px;
+  z-index: 50;
+}
+.card-stack{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 420ms cubic-bezier(.2,.8,.2,1);
+}
+.face{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  border-radius: 14px;
+  overflow:hidden;
+  background: transparent;
+}
+.front{ transform: rotateY(0deg); }
+.back{  transform: rotateY(-180deg); }
+.card-stack.flipping{ transform: rotateY(180deg); }
+
+.cards-panel{
+  height: 100%;
+  padding: 8px;
+  background: rgba(10,12,14,1);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px var(--shadow);
+  overflow: hidden;
+
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+.cols{
+  width: 100%;
+  height: auto;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.col{ display:flex; flex-direction:column; gap: 8px; }
+
+.song-card{
+  width: 100%;
+  background: var(--card);
+  border: 3px solid var(--cardBorder);
+  border-radius: 10px;
+  padding: 8px;
+  color: #1a1a1a;
+  display:flex;
+  gap: 10px;
+  align-items: baseline;
+  min-height: 44px;
+}
+.song-code{
+  background: #d54848;
+  color: #fff;
+  font-weight: 900;
+  border-radius: 8px;
+  padding: 5px 9px;
+  min-width: 42px;
+  text-align:center;
+  font-size: 14px;
+}
+.song-title{ font-weight: 800; line-height: 1.1; font-size: 13.5px; }
+
+/* Keypad hotspots */
+.keypad{
+  position:absolute;
+  top: 57.5%;
+  left: 11%;
+  width: 78%;
+  z-index: 150;
+}
+.keys{
+  display:grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 1.6%;
+}
+.keys + .keys{ margin-top: 2.2%; }
+.key{
+  height: clamp(34px, 6.2vw, 54px);
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0;
+}
+
+/* Now playing arrow hotspots */
+.nowplaying{
+  position:absolute;
+  top: 90.5%;
+  left: 0;
+  width: 100%;
+  height: 9%;
+  z-index: 150;
+}
+.nav-btn{
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  position:absolute;
+  font-size: 0;
+}
+#prevQueue{ left: 4%; top: 18%; width: 12%; height: 64%; border-radius: 10px; }
+#nextQueue{ right: 4%; top: 18%; width: 12%; height: 64%; border-radius: 10px; }
+
+
+
+/* ============================================================
+   Hotspot alignment + Now Playing styling patch
+   - Adds CSS variables so you can nudge alignment in ONE place
+   - Adds debug outlines (toggle by adding class 'debug-hotspots' to body)
+   - Styles #nowPlayingOverlayText to match the printed "NOW PLAYING" look
+============================================================ */
+
+:root{
+  /* ---- Hotspot calibration (tweak these) ---- */
+  --pageLeft-top: 6.6%;
+  --pageLeft-left: 27.0%;
+  --pageLeft-w: 21.0%;
+  --pageLeft-h: 12.5%;
+
+  --pageRight-top: 6.6%;
+  --pageRight-left: 52.0%;
+  --pageRight-w: 21.0%;
+  --pageRight-h: 12.5%;
+
+  --dial-top: 2.0%;
+  --dial-left: 28%;
+  --dial-w: 44%;
+  --dial-h: 17.5%;
+
+  /* Keypad block (whole keypad) */
+  --keypad-top: 63.0%;
+  --keypad-left: 11%;
+  --keypad-w: 77%;
+
+  /* Now Playing text placement (inside the window) */
+  --np-left: 22%;
+  --np-top: 80.8%;
+  --np-w: 56%;
+  --np-h: 6.6%;
+}
+
+/* Apply variables */
+#pageLeft{  top: var(--pageLeft-top) !important; left: var(--pageLeft-left) !important; width: var(--pageLeft-w) !important; height: var(--pageLeft-h) !important; }
+#pageRight{ top: var(--pageRight-top) !important; left: var(--pageRight-left) !important; width: var(--pageRight-w) !important; height: var(--pageRight-h) !important; }
+
+#dial{ top: var(--dial-top) !important; left: var(--dial-left) !important; width: var(--dial-w) !important; height: var(--dial-h) !important; }
+
+.keypad{ top: var(--keypad-top) !important; left: var(--keypad-left) !important; width: var(--keypad-w) !important; }
+
+/* Now Playing overlay text: match printed style better */
+#nowPlayingOverlayText{
+  left: var(--np-left) !important;
+  top: var(--np-top) !important;
+  width: var(--np-w) !important;
+  height: var(--np-h) !important;
+
+  /* font to resemble the printed "NOW PLAYING" label */
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 20px !important;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.96) !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,.75);
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* DEBUG outlines: add class="debug-hotspots" to <body> */
+body.debug-hotspots #pageLeft,
+body.debug-hotspots #pageRight,
+body.debug-hotspots #dial,
+body.debug-hotspots .key,
+body.debug-hotspots #prevQueue,
+body.debug-hotspots #nextQueue{
+  outline: 3px solid rgba(0,255,255,.85);
+  background: rgba(0,255,255,.10);
+}
+
+/* Optional: show labels for arrow hotspots in debug */
+body.debug-hotspots #pageLeft::before,
+body.debug-hotspots #pageRight::before,
+body.debug-hotspots #dial::before{
+  content: attr(id);
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(0,0,0,.85);
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 8px;
+  padding: 2px 6px;
+}
+
+
+
+/* ============================================================
+   v3: Fix NOW PLAYING prev/next arrow hotspot alignment
+   (These cyan boxes were sitting too low. Make the whole band higher.)
+============================================================ */
+
+:root{
+  /* Now playing band (hotspot container) */
+  --queue-top: 81.8%;
+  --queue-h: 12.0%;
+
+  /* Prev/Next arrow hitboxes (relative to image) */
+  --prev-left: 8.2%;
+  --prev-top: 3.0%;
+  --prev-w: 10.0%;
+  --prev-h: 42.8%;
+
+  --next-left: 81.8%;
+  --next-top: 3.0%;
+  --next-w: 10.0%;
+  --next-h: 42.8%;
+}
+
+/* Move the band to match the yellow arrows region */
+.nowplaying{
+  top: var(--queue-top) !important;
+  height: var(--queue-h) !important;
+}
+
+/* Position arrow hotspots directly (not relative to the band) */
+#prevQueue{
+  left: var(--prev-left) !important;
+  top: var(--prev-top) !important;
+  width: var(--prev-w) !important;
+  height: var(--prev-h) !important;
+}
+
+#nextQueue{
+  left: var(--next-left) !important;
+  top: var(--next-top) !important;
+  width: var(--next-w) !important;
+  height: var(--next-h) !important;
+}
+
+
+
+/* ============================================================
+   NOW PLAYING overlay (updated)
+   - Keeps your hotspot tuning intact
+   - Shows: "NOW PLAYING: <TITLE>" in one line
+   - Long titles scroll (marquee)
+   - Queue browsing (prev/next) will show a temporary "IN QUEUE:" preview
+============================================================ */
+
+#nowPlayingOverlayText{
+  /* cover the printed label underneath so we have room for one clean line */
+  background: rgba(0,0,0,.55);
+  border-radius: 12px;
+  padding: 0 10px;
+  gap: 10px;
+  justify-content: flex-start !important;
+  text-transform: none !important; /* don't force uppercase on song titles */
+}
+
+/* label */
+#nowPlayingOverlayText .np-label{
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.95);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  text-transform: uppercase;
+}
+
+/* title viewport */
+#nowPlayingOverlayText .np-title{
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* title text */
+#nowPlayingOverlayText .np-title span{
+  display: inline-block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 10px rgba(0,0,0,.75);
+}
+
+/* marquee for long titles */
+#nowPlayingOverlayText .np-title span.marquee{
+  padding-left: 100%;
+  animation: npMarquee 10s linear infinite;
+}
+
+@keyframes npMarquee{
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* preview mode (shown when browsing queue with prev/next) */
+#nowPlayingOverlayText.preview .np-label{
+  content: none;
+}
+#nowPlayingOverlayText.preview{
+  background: rgba(0,0,0,.40);
+}
+#nowPlayingOverlayText.preview .np-label{
+  color: rgba(255,255,255,.92);
+}
+/* Now Playing window: keep text centered inside the window */
+.nowplaying-window {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;     /* vertical center */
+  justify-content: center; /* horizontal center */
+  overflow: hidden;
+}
+
+/* Song title styling */
+#nowPlayingText {
+  color: #fff;
+  font-size: 22px;         /* increase as needed */
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+  white-space: nowrap;
+  padding: 0 10px;
+}
+#nowPlayingText{
+  transform: translateY(-23px); /* move UP (try -3px to -10px) */
+}
+/* Force Now Playing title to be bright + large */
+#nowPlayingText{
+  color: #ffffff !important;
+  font-size: 26px !important;   /* bump this up */
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7); /* helps on busy backgrounds */
+}
+.nowplaying{ z-index: 9999 !important; position: absolute; }
+#nowPlayingText{ z-index: 10000 !important; position: relative; }
+
+
+
+/* ============================================================
+   Dim flash overlay (letters + numbers)
+   - Adds a white "flash" for 1s when a key gets class .btn-dim-flash
+   - Supports per-key nudges via CSS variables --flash-x / --flash-y
+============================================================ */
+
+/* Ensure pseudo-element positions relative to each key */
+.key{
+  position: relative;
+  --flash-x: 0px; /* + right, - left */
+  --flash-y: 0px; /* + down, - up */
+  --flash-inset: 18% 16%; /* overlay size inside hotspot (top/bottom, left/right) */
+}
+
+/* The actual white overlay */
+.key.btn-dim-flash::after{
+  content: "";
+  position: absolute;
+  inset: var(--flash-inset);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.9);
+  pointer-events: none;
+
+  transform: translate(var(--flash-x), var(--flash-y));
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+/* -----------------------------
+   Per-key nudges (edit these)
+   Tip: Start with A, then copy the values to others and fine-tune.
+------------------------------ */
+
+/* Letters A–H */
+.key[data-letter="A"]{ --flash-x: 8px; --flash-y: 6px; }
+.key[data-letter="B"]{ --flash-x: 7px; --flash-y: 6px; }
+.key[data-letter="C"]{ --flash-x: 6px; --flash-y: 6px; }
+.key[data-letter="D"]{ --flash-x: 4px; --flash-y: 6px; }
+.key[data-letter="E"]{ --flash-x: 2px; --flash-y: 6px; }
+.key[data-letter="F"]{ --flash-x: 0px; --flash-y: 6px; }
+.key[data-letter="G"]{ --flash-x: 0px; --flash-y: 6px; }
+.key[data-letter="H"]{ --flash-x: -1px; --flash-y: 6px; }
+
+/* Numbers 1–9 */
+.key[data-number="1"]{ --flash-x: 8px; --flash-y: -6px; }
+.key[data-number="2"]{ --flash-x: 7px; --flash-y: -6px; }
+.key[data-number="3"]{ --flash-x: 6px; --flash-y: -6px; }
+.key[data-number="4"]{ --flash-x: 4px; --flash-y: -6px; }
+.key[data-number="5"]{ --flash-x: 4px; --flash-y: -6px; }
+.key[data-number="6"]{ --flash-x: 2px; --flash-y: -6px; }
+.key[data-number="7"]{ --flash-x: 0px; --flash-y: -6px; }
+.key[data-number="8"]{ --flash-x: 0px; --flash-y: -6px; }
+.key[data-number="9"]{ --flash-x: -1px; --flash-y: -6px; }

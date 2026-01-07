@@ -110,16 +110,38 @@ function ensureNowPlayingEl(){
   el.style.whiteSpace = "nowrap";
   el.style.overflow = "hidden";
   el.style.textOverflow = "ellipsis";
-  el.textContent = "—";
+    el.innerHTML = `<div class="np-title"><span id="npTitleSpan">—</span></div>`;
 
   overlay.appendChild(el);
   return el;
 }
 
 function setNowPlayingText(text){
+  // Prefer writing directly into the lower window element if it exists in the HTML
+  const direct = document.getElementById("nowPlayingText");
+  const value = (text && String(text).trim()) ? String(text) : "—";
+
+  if (direct){
+    direct.textContent = value;
+    return;
+  }
+
+  // Fallback: injected overlay text (legacy)
   const el = ensureNowPlayingEl();
   if (!el) return;
-  el.textContent = text && text.trim() ? text : "—";
+
+  const span = el.querySelector("#npTitleSpan");
+  if (!span) return;
+
+  span.classList.remove("marquee");
+  span.textContent = value;
+
+  requestAnimationFrame(() => {
+    const titleBox = el.querySelector(".np-title");
+    if (!titleBox) return;
+    const needs = span.scrollWidth > titleBox.clientWidth + 4;
+    if (needs) span.classList.add("marquee");
+  });
 }
 
 function isAudioPlaying(){
@@ -156,8 +178,43 @@ function playClickSound(){
 
     osc.start(t0);
     osc.stop(t0 + 0.07);
-  }catch(_){}
+  }catch(_){
+    _pendingNowPlayingTitle = null;
 }
+}
+
+/* ============================================================
+   Button dim flash (letters + numbers)
+   - Adds a brief white "flash" overlay for 1 second when a key is pressed
+============================================================ */
+const DIM_FLASH_MS = 500;
+
+function flashDim(btn){
+  if (!btn) return;
+
+  // restart timer on rapid presses
+  if (btn._dimFlashT) clearTimeout(btn._dimFlashT);
+
+  btn.classList.add("btn-dim-flash");
+
+  btn._dimFlashT = setTimeout(() => {
+    btn.classList.remove("btn-dim-flash");
+    btn._dimFlashT = null;
+  }, DIM_FLASH_MS);
+}
+
+
+
+let _pendingNowPlayingTitle = null;
+
+// When audio actually starts, NOW PLAYING becomes authoritative
+audioPlayer?.addEventListener("playing", () => {
+  if (_pendingNowPlayingTitle != null){
+    setNowPlayingConfirmed(_pendingNowPlayingTitle);
+    _pendingNowPlayingTitle = null;
+  }
+});
+
 
 
 
@@ -183,6 +240,36 @@ let isAnimating = false;
 let selectedLetter = null;
 let queue = [];
 let queueCursor = -1;
+
+let browseCursor = -1;         // cursor for previewing queue (prev/next)
+let _nowPlayingTitle = "—";    // last confirmed playing title
+let _previewTimer = null;
+
+function setNowPlayingConfirmed(title){
+  _nowPlayingTitle = title && String(title).trim() ? String(title) : "—";
+  setNowPlayingText(_nowPlayingTitle);
+  const el = document.getElementById("nowPlayingOverlayText");
+  if (el) el.classList.remove("preview");
+}
+
+function showQueuePreview(text){
+  const el = ensureNowPlayingEl();
+  if (!el) return;
+
+  el.classList.add("preview");
+
+  // Temporarily replace label text
+  if (label) label.textContent = "IN QUEUE:";
+
+  setNowPlayingText(text);
+
+  if (_previewTimer) clearTimeout(_previewTimer);
+  _previewTimer = setTimeout(() => {
+    // Restore confirmed now playing
+    setNowPlayingConfirmed(_nowPlayingTitle);
+  }, 1600);
+}
+
 
 let pages = []; // 8 pages x 8 songs
 
@@ -313,32 +400,69 @@ function buildKeys(){
   lettersWrap.innerHTML = letters.map(l => `<button class="key" data-letter="${l}">${l}</button>`).join("");
   numbersWrap.innerHTML = ["1","2","3","4","5","6","7","8"].map(n => `<button class="key" data-number="${n}">${n}</button>`).join("");
 }
+/* ============================================================
+   Input helpers (avoid double-firing on touch devices)
+   Many mobile browsers will fire: pointerdown/touchstart AND a synthetic click.
+   This helper runs your handler once per user press.
+============================================================ */
+function addPressListener(el, handler, opts = {}) {
+  if (!el) return;
+  const IGNORE_CLICK_MS = opts.ignoreClickMs ?? 700;
+  let lastNonClickAt = 0;
+
+  const run = (e) => {
+    // Ignore the synthetic click that follows a touch/pointer press
+    if (e.type === "click" && (Date.now() - lastNonClickAt) < IGNORE_CLICK_MS) return;
+    if (e.type !== "click") lastNonClickAt = Date.now();
+
+    // Allow preventDefault in handlers for pointer/touch
+    try { e.preventDefault?.(); } catch(_) {}
+
+    const out = handler(e);
+    // swallow async rejections (we already log issues elsewhere)
+    if (out && typeof out.catch === "function") out.catch(()=>{});
+  };
+
+  if (window.PointerEvent) {
+    el.addEventListener("pointerdown", run, { passive: false });
+    el.addEventListener("click", run);
+  } else {
+    el.addEventListener("touchstart", run, { passive: false });
+    el.addEventListener("click", run);
+  }
+}
+
 const onLetterPress = (e) => {
   const btn = e.target.closest("button[data-letter]");
   if (!btn) return;
-  e.preventDefault?.();
+
   playClickSound();
+  flashDim(btn);
   selectedLetter = btn.dataset.letter;
 };
-lettersWrap?.addEventListener("click", onLetterPress);
-lettersWrap?.addEventListener("pointerdown", onLetterPress, { passive: false });
-lettersWrap?.addEventListener("touchstart", onLetterPress, { passive: false });
-numbersWrap?.addEventListener("click", async (e) => {
+
+const onNumberPress = async (e) => {
   const btn = e.target.closest("button[data-number]");
   if (!btn || !selectedLetter) return;
+
+  playClickSound();
+  flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
   await queueSong(code);
-});
+};
+
 const onCardPress = async (e) => {
   const card = e.target.closest(".song-card[data-code]");
   if (!card) return;
-  e.preventDefault?.();
+
   playClickSound();
   await queueSong(card.dataset.code);
 };
-front?.addEventListener("click", onCardPress);
-front?.addEventListener("pointerdown", onCardPress, { passive: false });
-front?.addEventListener("touchstart", onCardPress, { passive: false });
+
+// Bind once-per-press (prevents double beep + keeps dim working)
+addPressListener(lettersWrap, onLetterPress);
+addPressListener(numbersWrap, onNumberPress);
+addPressListener(front, onCardPress);
 
 
 async function queueSong(code){
@@ -356,12 +480,15 @@ async function queueSong(code){
   // Start immediately on the first selection
   if (!isAudioPlaying() && queueCursor < 0){
     queueCursor = 0;
+    browseCursor = queueCursor;
     await playSlot(queue[queueCursor].code, /*userInitiated*/ true);
     return;
   }
 
   // If something is already playing, just queue it up.
   if (queueCursor < 0) queueCursor = 0;
+  browseCursor = queueCursor;
+    browseCursor = queueCursor;
 
   // Keep "Now playing" showing the current track
   const current = queue[queueCursor];
@@ -370,15 +497,18 @@ async function queueSong(code){
 
 
 
-prevQueue?.addEventListener("click", async () => {
+
+prevQueue?.addEventListener("click", () => {
   if (queue.length === 0) return;
-  queueCursor = Math.max(0, queueCursor - 1);
-  await playSlot(queue[queueCursor].code, true);
+  if (browseCursor < 0) browseCursor = queueCursor >= 0 ? queueCursor : 0;
+  browseCursor = Math.max(0, browseCursor - 1);
+  showQueuePreview(queue[browseCursor].title || queue[browseCursor].code);
 });
-nextQueue?.addEventListener("click", async () => {
+nextQueue?.addEventListener("click", () => {
   if (queue.length === 0) return;
-  queueCursor = Math.min(queue.length - 1, queueCursor + 1);
-  await playSlot(queue[queueCursor].code, true);
+  if (browseCursor < 0) browseCursor = queueCursor >= 0 ? queueCursor : 0;
+  browseCursor = Math.min(queue.length - 1, browseCursor + 1);
+  showQueuePreview(queue[browseCursor].title || queue[browseCursor].code);
 });
 
 
@@ -387,7 +517,7 @@ async function playSlot(code, userInitiated = false){
   if (!rec || !rec.blob) return;
 
   const title = rec.title || titleFromFilename(rec.fileName || code);
-  setNowPlayingText(title);
+  _pendingNowPlayingTitle = title;
 
   const url = URL.createObjectURL(rec.blob);
   audioPlayer.src = url;
@@ -395,7 +525,9 @@ async function playSlot(code, userInitiated = false){
   try{
     if (userInitiated) await audioPlayer.play();
     else audioPlayer.play().catch(()=>{});
-  }catch(_){}
+  }catch(_){
+    _pendingNowPlayingTitle = null;
+}
 
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
@@ -572,7 +704,8 @@ audioPlayer?.addEventListener("ended", async () => {
     queueCursor += 1;
     await playSlot(queue[queueCursor].code, false);
   } else {
-    setNowPlayingText("—");
+    setNowPlayingConfirmed("—");
+    browseCursor = -1;
   }
 });
 
@@ -581,6 +714,7 @@ audioPlayer?.addEventListener("ended", async () => {
   await refreshPagesFromDB();
   renderCurrent();
   ensureNowPlayingEl();
-  setNowPlayingText("—");
+  setNowPlayingConfirmed("—");
+    browseCursor = -1;
   await populateLoader();
 })();

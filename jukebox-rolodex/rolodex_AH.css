@@ -465,3 +465,165 @@ body.debug-hotspots #dial::before{
   width: var(--next-w) !important;
   height: var(--next-h) !important;
 }
+
+
+
+/* ============================================================
+   NOW PLAYING overlay (updated)
+   - Keeps your hotspot tuning intact
+   - Shows: "NOW PLAYING: <TITLE>" in one line
+   - Long titles scroll (marquee)
+   - Queue browsing (prev/next) will show a temporary "IN QUEUE:" preview
+============================================================ */
+
+#nowPlayingOverlayText{
+  /* cover the printed label underneath so we have room for one clean line */
+  background: rgba(0,0,0,.55);
+  border-radius: 12px;
+  padding: 0 10px;
+  gap: 10px;
+  justify-content: flex-start !important;
+  text-transform: none !important; /* don't force uppercase on song titles */
+}
+
+/* label */
+#nowPlayingOverlayText .np-label{
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: .06em;
+  color: rgba(255,255,255,.95);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  text-transform: uppercase;
+}
+
+/* title viewport */
+#nowPlayingOverlayText .np-title{
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* title text */
+#nowPlayingOverlayText .np-title span{
+  display: inline-block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 10px rgba(0,0,0,.75);
+}
+
+/* marquee for long titles */
+#nowPlayingOverlayText .np-title span.marquee{
+  padding-left: 100%;
+  animation: npMarquee 10s linear infinite;
+}
+
+@keyframes npMarquee{
+  0%   { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* preview mode (shown when browsing queue with prev/next) */
+#nowPlayingOverlayText.preview .np-label{
+  content: none;
+}
+#nowPlayingOverlayText.preview{
+  background: rgba(0,0,0,.40);
+}
+#nowPlayingOverlayText.preview .np-label{
+  color: rgba(255,255,255,.92);
+}
+/* Now Playing window: keep text centered inside the window */
+.nowplaying-window {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;     /* vertical center */
+  justify-content: center; /* horizontal center */
+  overflow: hidden;
+}
+
+/* Song title styling */
+#nowPlayingText {
+  color: #fff;
+  font-size: 22px;         /* increase as needed */
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.1;
+  white-space: nowrap;
+  padding: 0 10px;
+}
+#nowPlayingText{
+  transform: translateY(-23px); /* move UP (try -3px to -10px) */
+}
+/* Force Now Playing title to be bright + large */
+#nowPlayingText{
+  color: #ffffff !important;
+  font-size: 26px !important;   /* bump this up */
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7); /* helps on busy backgrounds */
+}
+.nowplaying{ z-index: 9999 !important; position: absolute; }
+#nowPlayingText{ z-index: 10000 !important; position: relative; }
+
+
+
+/* ============================================================
+   Dim flash overlay (letters + numbers)
+   - Adds a white "flash" for 1s when a key gets class .btn-dim-flash
+   - Supports per-key nudges via CSS variables --flash-x / --flash-y
+============================================================ */
+
+/* Ensure pseudo-element positions relative to each key */
+.key{
+  position: relative;
+  --flash-x: 0px; /* + right, - left */
+  --flash-y: 0px; /* + down, - up */
+  --flash-inset: 18% 16%; /* overlay size inside hotspot (top/bottom, left/right) */
+}
+
+/* The actual white overlay */
+.key.btn-dim-flash::after{
+  content: "";
+  position: absolute;
+  inset: var(--flash-inset);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.9);
+  pointer-events: none;
+
+  transform: translate(var(--flash-x), var(--flash-y));
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+/* -----------------------------
+   Per-key nudges (edit these)
+   Tip: Start with A, then copy the values to others and fine-tune.
+------------------------------ */
+
+/* Letters A–H */
+.key[data-letter="A"]{ --flash-x: 8px; --flash-y: 6px; }
+.key[data-letter="B"]{ --flash-x: 7px; --flash-y: 6px; }
+.key[data-letter="C"]{ --flash-x: 6px; --flash-y: 6px; }
+.key[data-letter="D"]{ --flash-x: 4px; --flash-y: 6px; }
+.key[data-letter="E"]{ --flash-x: 2px; --flash-y: 6px; }
+.key[data-letter="F"]{ --flash-x: 0px; --flash-y: 6px; }
+.key[data-letter="G"]{ --flash-x: 0px; --flash-y: 6px; }
+.key[data-letter="H"]{ --flash-x: -1px; --flash-y: 6px; }
+
+/* Numbers 1–9 */
+.key[data-number="1"]{ --flash-x: 8px; --flash-y: -6px; }
+.key[data-number="2"]{ --flash-x: 7px; --flash-y: -6px; }
+.key[data-number="3"]{ --flash-x: 6px; --flash-y: -6px; }
+.key[data-number="4"]{ --flash-x: 4px; --flash-y: -6px; }
+.key[data-number="5"]{ --flash-x: 4px; --flash-y: -6px; }
+.key[data-number="6"]{ --flash-x: 2px; --flash-y: -6px; }
+.key[data-number="7"]{ --flash-x: 0px; --flash-y: -6px; }
+.key[data-number="8"]{ --flash-x: 0px; --flash-y: -6px; }
+.key[data-number="9"]{ --flash-x: -1px; --flash-y: -6px; }

@@ -4,29 +4,33 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Jukebox Rolodex (A–H)</title>
+
+  <!-- App CSS -->
   <link rel="stylesheet" href="rolodex_AH.css" />
 </head>
 <body>
 
-  <!-- Hamburger lives OUTSIDE the jukebox image area -->
+  <!-- Hamburger (opens loader) -->
   <button id="hamburger" class="hamburger" aria-label="Open menu" title="Load songs">
     <span></span><span></span><span></span>
   </button>
 
-  <!-- Fullscreen loader modal (starts hidden) -->
+  <!-- Loader modal (required by rolodex_AH.js populateLoader/openLoader) -->
   <div id="loaderModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="loaderTitle">
     <div class="modal-card">
       <div class="modal-header">
         <div>
           <div id="loaderTitle" class="modal-title">Load songs</div>
-          <div class="modal-subtitle">Click a row to choose an MP3 for that slot. The filename becomes the song title (you can edit it).</div>
+          <div class="modal-subtitle">
+            Click a row to choose an MP3 for that slot. The filename becomes the song title (you can edit it).
+          </div>
         </div>
         <button id="closeLoader" class="modal-close" aria-label="Close">✕</button>
       </div>
 
       <div class="modal-actions">
-        <button id="autoFillByName" class="btn">Auto-assign sequentially (A1…H8)</button>
-        <button id="clearAll" class="btn btn-danger">Clear all slots</button>
+        <button id="autoFillByName" class="btn" type="button">Auto-assign sequentially (A1…H8)</button>
+        <button id="clearAll" class="btn btn-danger" type="button">Clear all slots</button>
         <div class="modal-note">Saved locally in your browser (IndexedDB)</div>
       </div>
 
@@ -40,6 +44,7 @@
               <th></th>
             </tr>
           </thead>
+          <!-- IMPORTANT: this element fixes your crash -->
           <tbody id="slotRows"></tbody>
         </table>
       </div>
@@ -51,10 +56,14 @@
     <img class="jukebox-img" src="jukebox.png" alt="Jukebox UI" />
 
     <div class="overlay">
-      <button class="hotspot" id="pageLeft" aria-label="Flip left"></button>
-      <button class="hotspot" id="pageRight" aria-label="Flip right"></button>
+      <!-- TOP red-arrow hotspots -->
+      <button class="hotspot hotspot-left" id="pageLeft" aria-label="Flip left"></button>
+      <button class="hotspot hotspot-right" id="pageRight" aria-label="Flip right"></button>
+
+      <!-- Dial click zone -->
       <button class="dial-hotspot" id="dial" aria-label="Dial (click left/right to flip)"></button>
 
+      <!-- Rolodex window -->
       <div class="rolodex">
         <div class="card-stack" id="stack">
           <div class="face front" id="front"></div>
@@ -62,20 +71,54 @@
         </div>
       </div>
 
+      <!-- Keypad -->
       <div class="keypad">
         <div class="keys" id="letters"></div>
         <div class="keys" id="numbers"></div>
       </div>
 
+      <!-- Now Playing (queue navigation only) -->
       <div class="nowplaying">
-        <button class="nav-btn" id="prevQueue" aria-label="Previous queued song"></button>
-        <button class="nav-btn" id="nextQueue" aria-label="Next queued song"></button>
+        <button class="nav-btn" id="prevQueue" aria-label="Previous queued song" type="button"></button>
+
+        <!-- Removed the extra "Now playing" label to avoid ghost text.
+             Keep only the song text target used by JS. -->
+        <div class="nowplaying-window">
+          <div class="np-song" id="nowPlayingText">—</div>
+        </div>
+
+        <button class="nav-btn" id="nextQueue" aria-label="Next queued song" type="button"></button>
       </div>
 
+      <!-- Audio element required by JS -->
       <audio id="audioPlayer"></audio>
     </div>
   </div>
 
+  <!-- Use defer so DOM exists before init() runs -->
   <script defer src="rolodex_AH.js"></script>
+
+  <!-- Dial hotspot positioning -->
+  <style>
+    .dial-hotspot{
+      position:absolute;
+      pointer-events:auto;
+      background:transparent;
+      border:0;
+      padding:0;
+      cursor:pointer;
+
+      /* Tune these to sit over the big dial */
+      top: 2.5%;
+      left: 28%;
+      width: 44%;
+      height: 12%;
+      border-radius: 999px;
+    }
+
+    /* Safety: hide legacy debug/label layers if they exist in CSS/JS */
+    #pageLabel, #hint, #insertCoin, .credit-row, .np-title { display:none !important; }
+  </style>
+
 </body>
 </html>

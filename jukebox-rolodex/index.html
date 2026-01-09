@@ -70,6 +70,7 @@
           <div class="face back" id="back"></div>
         </div>
       </div>
+      <div class="rolodex-banner" aria-hidden="true">Retro Jukebox</div>
 
       <!-- Keypad -->
       <div class="keypad">
@@ -88,6 +89,20 @@
         </div>
 
         <button class="nav-btn" id="nextQueue" aria-label="Next queued song" type="button"></button>
+      </div>
+
+      <!-- Playing Next window -->
+      <div class="playing-next-window">
+        <div class="playing-next-text" id="playingNextText">—</div>
+      </div>
+
+      <!-- Transport controls -->
+      <div class="transport">
+        <button class="transport-btn" id="transportPrev" aria-label="Previous track" type="button"></button>
+        <button class="transport-btn" id="transportPause" aria-label="Pause" type="button"></button>
+        <button class="transport-btn" id="transportPlay" aria-label="Play" type="button"></button>
+        <button class="transport-btn" id="transportStop" aria-label="Stop" type="button"></button>
+        <button class="transport-btn" id="transportNext" aria-label="Next track" type="button"></button>
       </div>
 
       <!-- Audio element required by JS -->

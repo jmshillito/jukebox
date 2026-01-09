@@ -84,6 +84,13 @@ const audioPlayer = document.getElementById("audioPlayer");
    Now Playing overlay text (drawn on top of the PNG "Now playing" window)
 ============================================================ */
 function ensureNowPlayingEl(){
+  const direct = document.getElementById("nowPlayingText");
+  if (direct){
+    // If the inline window exists, avoid drawing the overlay mask on top of it.
+    document.getElementById("nowPlayingOverlayText")?.remove();
+    return null;
+  }
+
   let el = document.getElementById("nowPlayingOverlayText");
   if (el) return el;
 
@@ -231,6 +238,12 @@ const numbersWrap = document.getElementById("numbers");
 
 const prevQueue = document.getElementById("prevQueue");
 const nextQueue = document.getElementById("nextQueue");
+const playingNextText = document.getElementById("playingNextText");
+const transportPrev = document.getElementById("transportPrev");
+const transportPause = document.getElementById("transportPause");
+const transportPlay = document.getElementById("transportPlay");
+const transportStop = document.getElementById("transportStop");
+const transportNext = document.getElementById("transportNext");
 
 /* State */
 const letters = ["A","B","C","D","E","F","G","H"];
@@ -252,22 +265,30 @@ function setNowPlayingConfirmed(title){
   if (el) el.classList.remove("preview");
 }
 
-function showQueuePreview(text){
-  const el = ensureNowPlayingEl();
-  if (!el) return;
+function setPlayingNextText(text){
+  if (!playingNextText) return;
+  const value = (text && String(text).trim()) ? String(text) : "—";
+  playingNextText.textContent = value;
+}
 
-  el.classList.add("preview");
+function updatePlayingNext(){
+  if (queue.length === 0 || queueCursor < 0){
+    browseCursor = -1;
+    setPlayingNextText("—");
+    return;
+  }
 
-  // Temporarily replace label text
-  if (label) label.textContent = "IN QUEUE:";
+  const nextIndex = queueCursor + 1;
+  if (nextIndex >= queue.length){
+    browseCursor = -1;
+    setPlayingNextText("—");
+    return;
+  }
 
-  setNowPlayingText(text);
-
-  if (_previewTimer) clearTimeout(_previewTimer);
-  _previewTimer = setTimeout(() => {
-    // Restore confirmed now playing
-    setNowPlayingConfirmed(_nowPlayingTitle);
-  }, 1600);
+  if (browseCursor < nextIndex || browseCursor >= queue.length){
+    browseCursor = nextIndex;
+  }
+  setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
 }
 
 
@@ -463,6 +484,51 @@ const onCardPress = async (e) => {
 addPressListener(lettersWrap, onLetterPress);
 addPressListener(numbersWrap, onNumberPress);
 addPressListener(front, onCardPress);
+addPressListener(transportPrev, async () => {
+  playClickSound();
+  if (queue.length === 0) return;
+  if (queueCursor > 0){
+    queueCursor -= 1;
+    browseCursor = queueCursor;
+    await playSlot(queue[queueCursor].code, true);
+  } else if (audioPlayer) {
+    audioPlayer.pause();
+    try { audioPlayer.currentTime = 0; } catch(_) {}
+  }
+});
+addPressListener(transportPause, () => {
+  playClickSound();
+  audioPlayer?.pause();
+});
+addPressListener(transportPlay, async () => {
+  playClickSound();
+  if (queue.length === 0) return;
+  if (queueCursor < 0) queueCursor = 0;
+  browseCursor = queueCursor;
+  if (audioPlayer?.paused && audioPlayer.src){
+    await audioPlayer.play().catch(()=>{});
+    return;
+  }
+  await playSlot(queue[queueCursor].code, true);
+});
+addPressListener(transportStop, () => {
+  playClickSound();
+  if (!audioPlayer) return;
+  audioPlayer.pause();
+  try { audioPlayer.currentTime = 0; } catch(_) {}
+});
+addPressListener(transportNext, async () => {
+  playClickSound();
+  if (queue.length === 0) return;
+  if (queueCursor < queue.length - 1){
+    queueCursor += 1;
+    browseCursor = queueCursor;
+    await playSlot(queue[queueCursor].code, true);
+  } else if (audioPlayer) {
+    audioPlayer.pause();
+    try { audioPlayer.currentTime = 0; } catch(_) {}
+  }
+});
 
 
 async function queueSong(code){
@@ -481,7 +547,9 @@ async function queueSong(code){
   if (!isAudioPlaying() && queueCursor < 0){
     queueCursor = 0;
     browseCursor = queueCursor;
+    setNowPlayingText(title);
     await playSlot(queue[queueCursor].code, /*userInitiated*/ true);
+    updatePlayingNext();
     return;
   }
 
@@ -493,22 +561,35 @@ async function queueSong(code){
   // Keep "Now playing" showing the current track
   const current = queue[queueCursor];
   if (current) setNowPlayingText(current.title);
+  updatePlayingNext();
 }
 
 
 
 
 prevQueue?.addEventListener("click", () => {
-  if (queue.length === 0) return;
-  if (browseCursor < 0) browseCursor = queueCursor >= 0 ? queueCursor : 0;
-  browseCursor = Math.max(0, browseCursor - 1);
-  showQueuePreview(queue[browseCursor].title || queue[browseCursor].code);
+  if (queue.length === 0 || queueCursor < 0) return;
+  const minIndex = queueCursor + 1;
+  if (minIndex >= queue.length){
+    setPlayingNextText("—");
+    browseCursor = -1;
+    return;
+  }
+  if (browseCursor < minIndex) browseCursor = minIndex;
+  browseCursor = Math.max(minIndex, browseCursor - 1);
+  setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
 });
 nextQueue?.addEventListener("click", () => {
-  if (queue.length === 0) return;
-  if (browseCursor < 0) browseCursor = queueCursor >= 0 ? queueCursor : 0;
+  if (queue.length === 0 || queueCursor < 0) return;
+  const minIndex = queueCursor + 1;
+  if (minIndex >= queue.length){
+    setPlayingNextText("—");
+    browseCursor = -1;
+    return;
+  }
+  if (browseCursor < minIndex) browseCursor = minIndex;
   browseCursor = Math.min(queue.length - 1, browseCursor + 1);
-  showQueuePreview(queue[browseCursor].title || queue[browseCursor].code);
+  setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
 });
 
 
@@ -518,6 +599,7 @@ async function playSlot(code, userInitiated = false){
 
   const title = rec.title || titleFromFilename(rec.fileName || code);
   _pendingNowPlayingTitle = title;
+  setNowPlayingText(title);
 
   const url = URL.createObjectURL(rec.blob);
   audioPlayer.src = url;
@@ -530,6 +612,7 @@ async function playSlot(code, userInitiated = false){
 }
 
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  updatePlayingNext();
 }
 
 
@@ -706,6 +789,7 @@ audioPlayer?.addEventListener("ended", async () => {
   } else {
     setNowPlayingConfirmed("—");
     browseCursor = -1;
+    setPlayingNextText("—");
   }
 });
 
@@ -716,5 +800,6 @@ audioPlayer?.addEventListener("ended", async () => {
   ensureNowPlayingEl();
   setNowPlayingConfirmed("—");
     browseCursor = -1;
+  setPlayingNextText("—");
   await populateLoader();
 })();

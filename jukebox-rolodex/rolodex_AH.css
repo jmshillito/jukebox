@@ -214,10 +214,10 @@ body{
 /* Rolodex window + cards (same look you had) */
 .rolodex{
   position:absolute;
-  top: 21.8%;
-  left: 10.5%;
-  width: 79%;
-  height: 38.8%;
+  top: 24.0%;
+  left: 14.5%;
+  width: 71%;
+  height: 26.0%;
   perspective: 1000px;
   z-index: 50;
 }
@@ -259,6 +259,8 @@ body{
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  position: relative;
+  z-index: 1;
 }
 .col{ display:flex; flex-direction:column; gap: 8px; }
 
@@ -339,31 +341,62 @@ body{
 
 :root{
   /* ---- Hotspot calibration (tweak these) ---- */
-  --pageLeft-top: 6.6%;
-  --pageLeft-left: 27.0%;
-  --pageLeft-w: 21.0%;
-  --pageLeft-h: 12.5%;
+  --pageLeft-top: 9.9%;
+  --pageLeft-left: 18.0%;
+  --pageLeft-w: 30.5%;
+  --pageLeft-h: 20.8%;
 
-  --pageRight-top: 6.6%;
-  --pageRight-left: 52.0%;
-  --pageRight-w: 21.0%;
-  --pageRight-h: 12.5%;
+  --pageRight-top: 9.9%;
+  --pageRight-left: 50.8%;
+  --pageRight-w: 30.5%;
+  --pageRight-h: 20.8%;
 
-  --dial-top: 2.0%;
-  --dial-left: 28%;
-  --dial-w: 44%;
-  --dial-h: 17.5%;
+  --dial-top: 1.5%;
+  --dial-left: 23%;
+  --dial-w: 54%;
+  --dial-h: 7.5%;
 
   /* Keypad block (whole keypad) */
-  --keypad-top: 63.0%;
-  --keypad-left: 11%;
-  --keypad-w: 77%;
+  --keypad-top: 52.5%;
+  --keypad-left: 18%;
+  --keypad-w: 63%;
 
   /* Now Playing text placement (inside the window) */
-  --np-left: 22%;
-  --np-top: 80.8%;
-  --np-w: 56%;
-  --np-h: 6.6%;
+  --np-left: 16.0%;
+  --np-top: 88.2%;
+  --np-w: 67.0%;
+  --np-h: 12.5%;
+
+  /* Playing Next text placement (inside the window) */
+  --pn-left: 18.0%;
+  --pn-top: 88.9%;
+  --pn-w: 63.0%;
+  --pn-h: 7.5%;
+
+  /* Card banner (covers the baked-in top row) */
+  --rb-left: 16%;
+  --rb-top: 16.5%;
+  --rb-w: 68%;
+  --rb-h: 8%;
+
+  /* Transport row (rewind/pause/play/stop/next) */
+  --transport-top: 78.0%;
+  --transport-h: 6.0%;
+
+  --transport-prev-left: 19.9%;
+  --transport-prev-w: 10.6%;
+
+  --transport-pause-left: 32.8%;
+  --transport-pause-w: 9.8%;
+
+  --transport-play-left: 44.5%;
+  --transport-play-w: 10.6%;
+
+  --transport-stop-left: 57.0%;
+  --transport-stop-w: 11.0%;
+
+  --transport-next-left: 69.9%;
+  --transport-next-w: 10.6%;
 }
 
 /* Apply variables */
@@ -399,7 +432,10 @@ body.debug-hotspots #pageRight,
 body.debug-hotspots #dial,
 body.debug-hotspots .key,
 body.debug-hotspots #prevQueue,
-body.debug-hotspots #nextQueue{
+body.debug-hotspots #nextQueue,
+body.debug-hotspots .transport-btn,
+body.debug-hotspots .playing-next-window,
+body.debug-hotspots .rolodex-banner{
   outline: 3px solid rgba(0,255,255,.85);
   background: rgba(0,255,255,.10);
 }
@@ -430,19 +466,19 @@ body.debug-hotspots #dial::before{
 
 :root{
   /* Now playing band (hotspot container) */
-  --queue-top: 81.8%;
-  --queue-h: 12.0%;
+  --queue-top: 61.2%;
+  --queue-h: 33.1%;
 
   /* Prev/Next arrow hitboxes (relative to image) */
-  --prev-left: 8.2%;
-  --prev-top: 3.0%;
-  --prev-w: 10.0%;
-  --prev-h: 42.8%;
+  --prev-left: 19.1%;
+  --prev-top: 86.4%;
+  --prev-w: 6.6%;
+  --prev-h: 13.3%;
 
-  --next-left: 81.8%;
-  --next-top: 3.0%;
-  --next-w: 10.0%;
-  --next-h: 42.8%;
+  --next-left: 73.4%;
+  --next-top: 86.4%;
+  --next-w: 6.3%;
+  --next-h: 13.3%;
 }
 
 /* Move the band to match the yellow arrows region */
@@ -540,8 +576,11 @@ body.debug-hotspots #dial::before{
 }
 /* Now Playing window: keep text centered inside the window */
 .nowplaying-window {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  left: var(--np-left);
+  top: calc(var(--np-top) - var(--queue-top));
+  width: var(--np-w);
+  height: var(--np-h);
   display: flex;
   align-items: center;     /* vertical center */
   justify-content: center; /* horizontal center */
@@ -559,7 +598,7 @@ body.debug-hotspots #dial::before{
   padding: 0 10px;
 }
 #nowPlayingText{
-  transform: translateY(-23px); /* move UP (try -3px to -10px) */
+  transform: none !important;
 }
 /* Force Now Playing title to be bright + large */
 #nowPlayingText{
@@ -570,7 +609,81 @@ body.debug-hotspots #dial::before{
   filter: none !important;
   text-shadow: 0 2px 6px rgba(0,0,0,0.7); /* helps on busy backgrounds */
 }
-.nowplaying{ z-index: 9999 !important; position: absolute; }
+.nowplaying{
+  z-index: 9999 !important;
+  position: absolute;
+  pointer-events: none;
+}
+.nowplaying .nav-btn{
+  pointer-events: auto;
+}
+
+/* Banner overlay that sits above the baked-in top row */
+.rolodex-banner{
+  position: absolute;
+  left: var(--rb-left);
+  top: var(--rb-top);
+  width: var(--rb-w);
+  height: var(--rb-h);
+  background: var(--card);
+  border: 3px solid var(--cardBorder);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: .04em;
+  color: #3a1b1b;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 300;
+}
+/* Playing Next text window */
+.playing-next-window{
+  position: absolute;
+  left: var(--pn-left);
+  top: var(--pn-top);
+  width: var(--pn-w);
+  height: var(--pn-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 8500;
+  overflow: hidden;
+}
+.playing-next-text{
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+  padding: 0 10px;
+}
+
+/* Transport controls */
+.transport{
+  position: absolute;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+.transport-btn{
+  position: absolute;
+  top: var(--transport-top);
+  height: var(--transport-h);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+#transportPrev{ left: var(--transport-prev-left); width: var(--transport-prev-w); }
+#transportPause{ left: var(--transport-pause-left); width: var(--transport-pause-w); }
+#transportPlay{ left: var(--transport-play-left); width: var(--transport-play-w); }
+#transportStop{ left: var(--transport-stop-left); width: var(--transport-stop-w); }
+#transportNext{ left: var(--transport-next-left); width: var(--transport-next-w); }
 #nowPlayingText{ z-index: 10000 !important; position: relative; }
 
 

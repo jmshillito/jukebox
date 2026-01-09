@@ -75,6 +75,7 @@ const loaderModal = document.getElementById("loaderModal");
 const closeLoader = document.getElementById("closeLoader");
 const slotRows = document.getElementById("slotRows");
 const autoFillByName = document.getElementById("autoFillByName");
+const autoFillRandom = document.getElementById("autoFillRandom");
 const clearAllBtn = document.getElementById("clearAll");
 
 const audioPlayer = document.getElementById("audioPlayer");
@@ -665,6 +666,49 @@ autoFillByName?.addEventListener("click", async () => {
         const f = files[idx++];
         await dbPut({ slot, fileName: f.name, title: titleFromFilename(f.name), mime: f.type || "audio/mpeg", blob: f });
       }
+    }
+
+    await refreshPagesFromDB();
+    renderCurrent();
+    await populateLoader();
+  });
+
+  picker.click();
+});
+
+function shuffleInPlace(arr){
+  for (let i = arr.length - 1; i > 0; i -= 1){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+autoFillRandom?.addEventListener("click", async () => {
+  const picker = document.createElement("input");
+  picker.type = "file";
+  picker.accept = "audio/mpeg,audio/mp3";
+  picker.multiple = true;
+
+  picker.addEventListener("change", async () => {
+    const files = Array.from(picker.files || []);
+    if (files.length === 0) return;
+
+    const slots = [];
+    for (const L of letters){
+      for (let i = 1; i <= 8; i++){
+        slots.push(`${L}${i}`);
+      }
+    }
+
+    shuffleInPlace(files);
+    shuffleInPlace(slots);
+
+    const count = Math.min(files.length, slots.length);
+    for (let i = 0; i < count; i += 1){
+      const f = files[i];
+      const slot = slots[i];
+      await dbPut({ slot, fileName: f.name, title: titleFromFilename(f.name), mime: f.type || "audio/mpeg", blob: f });
     }
 
     await refreshPagesFromDB();

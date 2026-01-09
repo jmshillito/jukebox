@@ -30,6 +30,7 @@
 
       <div class="modal-actions">
         <button id="autoFillByName" class="btn" type="button">Auto-assign sequentially (A1…H8)</button>
+        <button id="autoFillRandom" class="btn" type="button">Auto-assign randomly (A1…H8)</button>
         <button id="clearAll" class="btn btn-danger" type="button">Clear all slots</button>
         <div class="modal-note">Saved locally in your browser (IndexedDB)</div>
       </div>
@@ -53,9 +54,10 @@
 
   <!-- Jukebox image + overlay UI -->
   <div class="stage">
-    <img class="jukebox-img" src="jukebox.png" alt="Jukebox UI" />
+    <div class="jukebox-frame">
+      <img class="jukebox-img" src="jukebox.png" alt="Jukebox UI" />
 
-    <div class="overlay">
+      <div class="overlay">
       <!-- TOP red-arrow hotspots -->
       <button class="hotspot hotspot-left" id="pageLeft" aria-label="Flip left"></button>
       <button class="hotspot hotspot-right" id="pageRight" aria-label="Flip right"></button>
@@ -92,6 +94,7 @@
 
       <!-- Audio element required by JS -->
       <audio id="audioPlayer"></audio>
+      </div>
     </div>
   </div>
 

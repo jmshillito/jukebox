@@ -259,7 +259,7 @@ body{
   height: 100%;
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 5px;
   position: relative;
   z-index: 1;
   overflow: hidden;
@@ -271,12 +271,12 @@ body{
   background: var(--card);
   border: 3px solid var(--cardBorder);
   border-radius: 10px;
-  padding: 8px;
+  padding: 6px;
   color: #1a1a1a;
   display:flex;
   gap: 10px;
   align-items: baseline;
-  max-height: 63px;
+  max-height: 72px;
 }
 .song-code{
   background: #d54848;

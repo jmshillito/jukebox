@@ -243,7 +243,7 @@ body{
 
 .cards-panel{
   height: 100%;
-  padding: 8px;
+  padding: 3px;
   background: rgba(10,12,14,1);
   border-radius: 14px;
   box-shadow: 0 10px 30px var(--shadow);
@@ -276,7 +276,7 @@ body{
   display:flex;
   gap: 10px;
   align-items: baseline;
-  max-height: 72px;
+  max-height: 80px;
 }
 .song-code{
   background: #d54848;

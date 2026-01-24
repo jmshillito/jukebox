@@ -218,7 +218,7 @@ body{
   top: 20.0%;
   left: 14.5%;
   width: 71%;
-  height: 50.0%;
+  height: 28.0%;
   perspective: 1000px;
   z-index: 50;
 }
@@ -262,6 +262,7 @@ body{
   gap: 8px;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 .col{ display:flex; flex-direction:column; gap: 8px; }
 
@@ -275,7 +276,7 @@ body{
   display:flex;
   gap: 10px;
   align-items: baseline;
-  max-height: 48px;
+  max-height: 56px;
 }
 .song-code{
   background: #d54848;

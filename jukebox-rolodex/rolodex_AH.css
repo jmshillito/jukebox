@@ -172,7 +172,7 @@ body{
 ------------------------------------------------------------ */
 .stage{
   position: relative;
-  width: min(720px, 96vw);
+  width: min(720px, 100vw);
   margin: 26px auto 30px auto;
 }
 .jukebox-img{
@@ -255,7 +255,7 @@ body{
 }
 .cols{
   width: 100%;
-  height: auto;
+  height: 100%;
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
@@ -274,7 +274,7 @@ body{
   display:flex;
   gap: 10px;
   align-items: baseline;
-  min-height: 44px;
+  height: 100%;
 }
 .song-code{
   background: #d54848;

@@ -195,13 +195,16 @@ body{
   aspect-ratio: 2 / 3;
   display: grid;
   place-items: center;
+  margin: 0 auto;
+  background: url("jukebox.png") center / contain no-repeat;
 }
 .jukebox-img{
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  display: block;
-  position: relative;
+  opacity: 0;
   z-index: 0;
   pointer-events: none;
 }
@@ -270,31 +273,36 @@ body{
   box-shadow: 0 10px 30px var(--shadow);
   overflow: hidden;
 
-  display:flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
+  display: grid;
 }
 .cols{
   width: 100%;
-  height: auto;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
-.col{ display:flex; flex-direction:column; gap: 8px; }
+.col{
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 8px;
+  min-height: 0;
+}
 
 .song-card{
   width: 100%;
+  height: 100%;
   background: var(--card);
   border: 3px solid var(--cardBorder);
   border-radius: 10px;
   padding: 8px;
   color: #1a1a1a;
-  display:flex;
+  display: flex;
   gap: 10px;
-  align-items: baseline;
-  min-height: 44px;
+  align-items: center;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 .song-code{
   background: #d54848;
@@ -306,7 +314,17 @@ body{
   text-align:center;
   font-size: 14px;
 }
-.song-title{ font-weight: 800; line-height: 1.1; font-size: 13.5px; }
+.song-title{
+  font-weight: 800;
+  line-height: 1.1;
+  font-size: 13.5px;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
 
 /* Keypad hotspots */
 .keypad{

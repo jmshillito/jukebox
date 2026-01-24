@@ -173,7 +173,7 @@ body{
 .stage{
   position: relative;
   width: min(720px, 100vw);
-  margin: 26px auto 30px auto;
+  margin: 8px auto 8px auto;
 }
 .jukebox-img{
   width: 100%;
@@ -217,7 +217,7 @@ body{
   top: 24.0%;
   left: 14.5%;
   width: 71%;
-  height: 26.0%;
+  height: 72.0%;
   perspective: 1000px;
   z-index: 50;
 }

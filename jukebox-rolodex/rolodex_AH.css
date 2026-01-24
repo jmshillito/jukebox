@@ -215,7 +215,7 @@ body{
 /* Rolodex window + cards (same look you had) */
 .rolodex{
   position:absolute;
-  top: 24.0%;
+  top: 18.0%;
   left: 14.5%;
   width: 71%;
   height: 45.0%;
@@ -621,24 +621,7 @@ body.debug-hotspots #dial::before{
 
 /* Banner overlay that sits above the baked-in top row */
 .rolodex-banner{
-  position: absolute;
-  left: var(--rb-left);
-  top: var(--rb-top);
-  width: var(--rb-w);
-  height: var(--rb-h);
-  background: var(--card);
-  border: 3px solid var(--cardBorder);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 20px;
-  letter-spacing: .04em;
-  color: #3a1b1b;
-  text-transform: uppercase;
-  pointer-events: none;
-  z-index: 300;
+  display: none;
 }
 /* Playing Next text window */
 .playing-next-window{

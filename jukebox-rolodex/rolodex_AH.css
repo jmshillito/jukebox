@@ -218,7 +218,7 @@ body{
   top: 20.0%;
   left: 14.5%;
   width: 71%;
-  height: 35.0%;
+  height: 50.0%;
   perspective: 1000px;
   z-index: 50;
 }
@@ -275,7 +275,7 @@ body{
   display:flex;
   gap: 10px;
   align-items: baseline;
-  max-height: 65px;
+  max-height: 48px;
 }
 .song-code{
   background: #d54848;

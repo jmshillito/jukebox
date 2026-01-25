@@ -194,7 +194,7 @@ function playClickSound(){
    Button dim flash (letters + numbers)
    - Adds a brief white "flash" overlay for 1 second when a key is pressed
 ============================================================ */
-const DIM_FLASH_MS = 500;
+const DIM_FLASH_MS = 3000;
 
 function flashDim(btn){
   if (!btn) return;

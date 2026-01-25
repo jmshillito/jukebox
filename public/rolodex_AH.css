@@ -605,8 +605,9 @@ body.debug-hotspots #dial::before{
 /* Force Now Playing title to be bright + large */
 #nowPlayingText{
   color: #ffffff !important;
-  font-size: 26px !important;   /* bump this up */
+  font-size: 20px !important;
   font-weight: 700 !important;
+  line-height: 1 !important;
   opacity: 1 !important;
   filter: none !important;
   text-shadow: 0 2px 6px rgba(0,0,0,0.7); /* helps on busy backgrounds */

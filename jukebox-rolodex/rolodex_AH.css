@@ -369,7 +369,7 @@ body{
   --np-top: 88.2%;
   --np-w: 67.0%;
   --np-h: 12.5%;
-  --np-text-y: -12px;
+  --np-text-y: -10px;
 
   /* Playing Next text placement (inside the window) */
   --pn-left: 18.0%;

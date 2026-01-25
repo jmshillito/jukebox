@@ -125,6 +125,40 @@ async function authFetch(url, options = {}){
   return fetch(url, { ...options, headers });
 }
 
+function createSongId(){
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function uploadSongToCloud(file, title){
+  const contentType = file.type || "audio/mpeg";
+  const songId = createSongId();
+
+  const uploadRes = await authFetch("/api/r2-upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ songId, contentType }),
+  });
+  if (!uploadRes.ok) throw new Error("Failed to get upload URL");
+
+  const { url, key } = await uploadRes.json();
+  const putRes = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error("Failed to upload file");
+
+  const metaRes = await authFetch("/api/songs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: songId, title, r2_key: key }),
+  });
+  if (!metaRes.ok) throw new Error("Failed to save metadata");
+
+  return { songId, r2Key: key };
+}
+
 
 /* ============================================================
    Now Playing overlay text (drawn on top of the PNG "Now playing" window)
@@ -726,6 +760,18 @@ function makeSlotRow(slot){
 
     await refreshPagesFromDB();
     renderCurrent();
+
+    try{
+      const cloud = await uploadSongToCloud(file, title);
+      const rec = await dbGet(slot);
+      if (rec){
+        rec.song_id = cloud.songId;
+        rec.r2_key = cloud.r2Key;
+        await dbPut(rec);
+      }
+    }catch(err){
+      console.warn("Cloud upload failed", err);
+    }
   });
 
   input.addEventListener("change", async () => {

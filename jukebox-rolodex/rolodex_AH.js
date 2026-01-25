@@ -69,6 +69,18 @@ function titleFromFilename(name){
   return base.replace(/[_\-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function slotTitleFromPages(code){
+  const all = Array.isArray(pages) ? pages.flat() : [];
+  const song = all.find(s => s.code === code);
+  return song?.title || code;
+}
+
+function resolveSlotTitle(code, rec){
+  if (rec?.title) return rec.title;
+  if (rec?.fileName) return titleFromFilename(rec.fileName);
+  return slotTitleFromPages(code);
+}
+
 /* Elements */
 const hamburger = document.getElementById("hamburger");
 const loaderModal = document.getElementById("loaderModal");
@@ -470,7 +482,9 @@ const onNumberPress = async (e) => {
   playClickSound();
   flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
-  setNowPlayingText(code);
+  const rec = await dbGet(code);
+  const title = resolveSlotTitle(code, rec);
+  setNowPlayingText(title);
   await queueSong(code);
 };
 

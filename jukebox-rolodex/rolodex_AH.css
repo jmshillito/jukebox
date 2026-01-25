@@ -251,7 +251,7 @@ body{
 
   display:flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-around;
   align-items: stretch;
 }
 .cols{
@@ -264,7 +264,7 @@ body{
   z-index: 1;
   overflow: hidden;
 }
-.col{ display:flex; flex-direction:column; gap: 8px; }
+.col{ display:flex; flex-direction:column; gap: 8px; justify-content: space-around; }
 
 .song-card{
   width: 100%;

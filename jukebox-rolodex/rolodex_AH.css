@@ -360,8 +360,8 @@ body{
   --dial-h: 7.5%;
 
   /* Keypad block (whole keypad) */
-  --keypad-top: 61%;
-  --keypad-left: 8%;
+  --keypad-top: 56.5%;
+  --keypad-left: 10%;
   --keypad-w: 84%;
 
   /* Now Playing text placement (inside the window) */

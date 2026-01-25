@@ -362,7 +362,7 @@ body{
   /* Keypad block (whole keypad) */
   --keypad-top: 56.5%;
   --keypad-left: 10%;
-  --keypad-w: 80%;
+  --keypad-w: 78%;
 
   /* Now Playing text placement (inside the window) */
   --np-left: 16.0%;

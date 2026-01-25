@@ -460,6 +460,7 @@ const onLetterPress = (e) => {
   playClickSound();
   flashDim(btn);
   selectedLetter = btn.dataset.letter;
+  setNowPlayingText(selectedLetter);
 };
 
 const onNumberPress = async (e) => {
@@ -469,6 +470,7 @@ const onNumberPress = async (e) => {
   playClickSound();
   flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
+  setNowPlayingText(code);
   await queueSong(code);
 };
 

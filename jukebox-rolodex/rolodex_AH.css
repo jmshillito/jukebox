@@ -294,9 +294,9 @@ body{
 /* Keypad hotspots */
 .keypad{
   position:absolute;
-  top: 57.5%;
-  left: 11%;
-  width: 78%;
+  top: 61%;
+  left: 8%;
+  width: 84%;
   z-index: 150;
 }
 .keys{

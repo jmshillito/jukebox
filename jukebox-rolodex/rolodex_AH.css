@@ -276,7 +276,7 @@ body{
   display:flex;
   gap: 10px;
   align-items: baseline;
-  max-height: 134px;
+  max-height: 120px;
   flex: 1;
 }
 .song-code{

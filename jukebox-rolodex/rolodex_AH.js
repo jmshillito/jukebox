@@ -90,6 +90,40 @@ const autoFillByName = document.getElementById("autoFillByName");
 const clearAllBtn = document.getElementById("clearAll");
 
 const audioPlayer = document.getElementById("audioPlayer");
+const clerkUserButton = document.getElementById("clerk-user-button");
+const clerkSignIn = document.getElementById("clerk-signin");
+
+
+async function initClerkAuth(){
+  if (!window.Clerk) return;
+  await window.Clerk.load();
+
+  const render = () => {
+    if (clerkUserButton) clerkUserButton.replaceChildren();
+    if (clerkSignIn) clerkSignIn.replaceChildren();
+
+    if (window.Clerk.user && clerkUserButton){
+      window.Clerk.mountUserButton(clerkUserButton);
+      return;
+    }
+    if (clerkSignIn) window.Clerk.mountSignIn(clerkSignIn);
+  };
+
+  render();
+  if (typeof window.Clerk.addListener === "function") window.Clerk.addListener(render);
+}
+
+async function getSessionToken(){
+  if (!window.Clerk?.session) return null;
+  return window.Clerk.session.getToken();
+}
+
+async function authFetch(url, options = {}){
+  const token = await getSessionToken();
+  const headers = new Headers(options.headers || {});
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return fetch(url, { ...options, headers });
+}
 
 
 /* ============================================================
@@ -786,6 +820,7 @@ clearAllBtn?.addEventListener("click", async () => {
 (async function init(){
   buildKeys();
   bindPaging();
+  await initClerkAuth();
 
   // Toggle hotspot outlines for alignment: press "d"
   window.addEventListener("keydown", (e) => {

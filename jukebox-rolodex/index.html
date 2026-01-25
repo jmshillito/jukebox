@@ -7,8 +7,19 @@
 
   <!-- App CSS -->
   <link rel="stylesheet" href="rolodex_AH.css" />
+
+  <!-- Clerk Auth -->
+  <script async crossorigin="anonymous"
+    data-clerk-publishable-key="CLERK_PUBLISHABLE_KEY"
+    src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
 </head>
 <body>
+
+  <!-- Auth UI -->
+  <div class="auth-ui" aria-live="polite">
+    <div id="clerk-user-button"></div>
+    <div id="clerk-signin"></div>
+  </div>
 
   <!-- Hamburger (opens loader) -->
   <button id="hamburger" class="hamburger" aria-label="Open menu" title="Load songs">

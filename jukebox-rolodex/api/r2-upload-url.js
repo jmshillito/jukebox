@@ -1,4 +1,4 @@
-const { PutObjectCommand, getSignedUrl, getS3Client, readJson, sendJson, requireAuth } = require("./_lib");
+const { PutObjectCommand, getSignedUrl, getR2Bucket, getS3Client, readJson, sendJson, requireAuth } = require("./_lib");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return sendJson(res, 405, { error: "Method not allowed" });
@@ -13,10 +13,13 @@ module.exports = async (req, res) => {
 
     const key = `users/${userId}/songs/${songId}.mp3`;
     const s3 = getS3Client();
+    const bucket = getR2Bucket();
+    if (!bucket) return sendJson(res, 500, { error: "Missing R2 bucket env" });
+
     const url = await getSignedUrl(
       s3,
       new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET,
+        Bucket: bucket,
         Key: key,
         ContentType: contentType,
       }),

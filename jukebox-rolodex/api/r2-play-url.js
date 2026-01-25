@@ -1,4 +1,4 @@
-const { GetObjectCommand, getSignedUrl, getS3Client, getSupabase, sendJson, requireAuth } = require("./_lib");
+const { GetObjectCommand, getSignedUrl, getR2Bucket, getS3Client, getSupabase, sendJson, requireAuth } = require("./_lib");
 
 module.exports = async (req, res) => {
   if (req.method !== "GET") return sendJson(res, 405, { error: "Method not allowed" });
@@ -20,10 +20,13 @@ module.exports = async (req, res) => {
     if (error || !data) return sendJson(res, 404, { error: "Song not found" });
 
     const s3 = getS3Client();
+    const bucket = getR2Bucket();
+    if (!bucket) return sendJson(res, 500, { error: "Missing R2 bucket env" });
+
     const url = await getSignedUrl(
       s3,
       new GetObjectCommand({
-        Bucket: process.env.R2_BUCKET,
+        Bucket: bucket,
         Key: data.r2_key,
       }),
       { expiresIn: 60 }

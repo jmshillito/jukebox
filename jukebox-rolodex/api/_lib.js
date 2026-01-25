@@ -11,7 +11,9 @@ function normalizeClerkPublicKey(value){
   return `-----BEGIN PUBLIC KEY-----\n${chunks.join("\n")}\n-----END PUBLIC KEY-----`;
 }
 
-const clerkPublicKey = normalizeClerkPublicKey(process.env.CLERK_JWT_VERIFICATION_KEY);
+const clerkPublicKey = normalizeClerkPublicKey(
+  process.env.CLERK_JWT_VERIFICATION_KEY || process.env.CLERK_JWT_KEY
+);
 
 let supabase = null;
 let s3 = null;
@@ -31,9 +33,21 @@ function getSupabase(){
   return supabase;
 }
 
+function getR2Endpoint(){
+  if (process.env.R2_ENDPOINT) return process.env.R2_ENDPOINT;
+  if (process.env.R2_ACCOUNT_ID) {
+    return `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+  }
+  return null;
+}
+
+function getR2Bucket(){
+  return process.env.R2_BUCKET || process.env.R2_BUCKET_NAME || null;
+}
+
 function getS3Client(){
   if (s3) return s3;
-  const endpoint = process.env.R2_ENDPOINT;
+  const endpoint = getR2Endpoint();
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   if (!endpoint || !accessKeyId || !secretAccessKey) throw new Error("Missing R2 env");
@@ -92,6 +106,7 @@ module.exports = {
   GetObjectCommand,
   getSignedUrl,
   getSupabase,
+  getR2Bucket,
   getS3Client,
   readJson,
   sendJson,

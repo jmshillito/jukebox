@@ -143,7 +143,12 @@ function ensureCloudStatusEl(){
   el = document.createElement("div");
   el.id = "cloudStatus";
   el.className = "cloud-status hidden";
-  actions.appendChild(el);
+  const note = actions.querySelector(".modal-note");
+  if (note) {
+    actions.insertBefore(el, note);
+  } else {
+    actions.appendChild(el);
+  }
   return el;
 }
 
@@ -163,6 +168,7 @@ function createSongId(){
 }
 
 async function uploadSongToCloud(file, title){
+  setCloudStatus("Uploading to cloud...", "ok");
   const contentType = file.type || "audio/mpeg";
   const songId = createSongId();
 

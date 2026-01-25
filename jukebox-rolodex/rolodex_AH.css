@@ -105,6 +105,21 @@ body{
   border-bottom: 1px solid rgba(0,0,0,.10);
 }
 .modal-note{ margin-left:auto; opacity:.7; font-size:13px; }
+.cloud-status{
+  margin-left:auto;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(160,0,0,.2);
+  background: rgba(255,230,230,.9);
+  color: #7a0b0b;
+}
+.cloud-status[data-type="ok"]{
+  border-color: rgba(0,120,60,.2);
+  background: rgba(220,255,235,.9);
+  color: #0b5f2f;
+}
 
 .btn{
   border: 1px solid rgba(0,0,0,.16);

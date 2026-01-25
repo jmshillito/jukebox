@@ -125,6 +125,38 @@ async function authFetch(url, options = {}){
   return fetch(url, { ...options, headers });
 }
 
+async function readJsonSafe(res){
+  try{
+    return await res.json();
+  }catch(_){
+    return null;
+  }
+}
+
+function ensureCloudStatusEl(){
+  let el = document.getElementById("cloudStatus");
+  if (el) return el;
+
+  const actions = document.querySelector(".modal-actions");
+  if (!actions) return null;
+
+  el = document.createElement("div");
+  el.id = "cloudStatus";
+  el.className = "cloud-status hidden";
+  actions.appendChild(el);
+  return el;
+}
+
+function setCloudStatus(message, type = "error"){
+  const el = ensureCloudStatusEl();
+  if (!el) return;
+  el.textContent = message;
+  el.dataset.type = type;
+  el.classList.remove("hidden");
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => el.classList.add("hidden"), 8000);
+}
+
 function createSongId(){
   if (window.crypto?.randomUUID) return window.crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -139,7 +171,10 @@ async function uploadSongToCloud(file, title){
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ songId, contentType }),
   });
-  if (!uploadRes.ok) throw new Error("Failed to get upload URL");
+  if (!uploadRes.ok) {
+    const payload = await readJsonSafe(uploadRes);
+    throw new Error(payload?.error || `Upload URL failed (${uploadRes.status})`);
+  }
 
   const { url, key } = await uploadRes.json();
   const putRes = await fetch(url, {
@@ -147,14 +182,17 @@ async function uploadSongToCloud(file, title){
     headers: { "Content-Type": contentType },
     body: file,
   });
-  if (!putRes.ok) throw new Error("Failed to upload file");
+  if (!putRes.ok) throw new Error(`R2 upload failed (${putRes.status})`);
 
   const metaRes = await authFetch("/api/songs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: songId, title, r2_key: key }),
   });
-  if (!metaRes.ok) throw new Error("Failed to save metadata");
+  if (!metaRes.ok) {
+    const payload = await readJsonSafe(metaRes);
+    throw new Error(payload?.error || `Supabase insert failed (${metaRes.status})`);
+  }
 
   return { songId, r2Key: key };
 }
@@ -769,8 +807,10 @@ function makeSlotRow(slot){
         rec.r2_key = cloud.r2Key;
         await dbPut(rec);
       }
+      setCloudStatus("Saved to cloud", "ok");
     }catch(err){
       console.warn("Cloud upload failed", err);
+      setCloudStatus(err?.message || "Cloud upload failed", "error");
     }
   });
 

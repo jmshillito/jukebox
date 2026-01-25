@@ -404,6 +404,7 @@ body{
   --np-top: 80.8%;
   --np-w: 56%;
   --np-h: 6.6%;
+  --np-text-y: -32px;
 }
 
 /* Apply variables */
@@ -599,7 +600,7 @@ body.debug-hotspots #dial::before{
   padding: 0 10px;
 }
 #nowPlayingText{
-  transform: translateY(-25px); /* move UP slightly */
+  transform: translateY(var(--np-text-y)); /* nudge text up within the window */
 }
 /* Force Now Playing title to be bright + large */
 #nowPlayingText{

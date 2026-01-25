@@ -277,7 +277,6 @@ body{
   gap: 10px;
   align-items: baseline;
   max-height: 120px;
-  flex: 1;
 }
 .song-code{
   background: #d54848;

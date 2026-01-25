@@ -218,7 +218,7 @@ body{
   top: 12.0%;
   left: 14.5%;
   width: 71%;
-  height: 42.5%;
+  height: 50.0%;
   perspective: 1000px;
   z-index: 50;
 }
@@ -264,7 +264,7 @@ body{
   z-index: 1;
   overflow: hidden;
 }
-.col{ display:flex; flex-direction:column; gap: 4px; justify-content: space-around; }
+.col{ display:flex; flex-direction:column; gap: 2px; justify-content: space-around; }
 
 .song-card{
   width: 100%;
@@ -277,6 +277,7 @@ body{
   gap: 10px;
   align-items: baseline;
   max-height: 134px;
+  flex: 1;
 }
 .song-code{
   background: #d54848;

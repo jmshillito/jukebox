@@ -401,10 +401,10 @@ body{
 
   /* Now Playing text placement (inside the window) */
   --np-left: 22%;
-  --np-top: 79.8%;
+  --np-top: 79.4%;
   --np-w: 56%;
   --np-h: 6.6%;
-  --np-text-y: -10px;
+  --np-text-y: -8px;
 }
 
 /* Apply variables */

@@ -60,9 +60,10 @@
 
   <!-- Jukebox image + overlay UI -->
   <div class="stage">
-    <img class="jukebox-img" src="jukebox.png" alt="Jukebox UI" />
+    <img class="jukebox-img stage-bg" src="jukebox.png" alt="Jukebox UI" />
 
-    <div class="overlay">
+    <div class="cards">
+      <div class="overlay">
       <!-- TOP red-arrow hotspots -->
       <button class="hotspot hotspot-left" id="pageLeft" aria-label="Flip left"></button>
       <button class="hotspot hotspot-right" id="pageRight" aria-label="Flip right"></button>
@@ -114,6 +115,7 @@
 
       <!-- Audio element required by JS -->
       <audio id="audioPlayer"></audio>
+      </div>
     </div>
   </div>
 

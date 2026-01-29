@@ -69,6 +69,18 @@ function titleFromFilename(name){
   return base.replace(/[_\-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function slotTitleFromPages(code){
+  const all = Array.isArray(pages) ? pages.flat() : [];
+  const song = all.find(s => s.code === code);
+  return song?.title || code;
+}
+
+function resolveSlotTitle(code, rec){
+  if (rec?.title) return rec.title;
+  if (rec?.fileName) return titleFromFilename(rec.fileName);
+  return slotTitleFromPages(code);
+}
+
 /* Elements */
 const hamburger = document.getElementById("hamburger");
 const loaderModal = document.getElementById("loaderModal");
@@ -78,12 +90,181 @@ const autoFillByName = document.getElementById("autoFillByName");
 const clearAllBtn = document.getElementById("clearAll");
 
 const audioPlayer = document.getElementById("audioPlayer");
+const clerkUserButton = document.getElementById("clerk-user-button");
+const clerkSignIn = document.getElementById("clerk-signin");
+
+
+async function initClerkAuth(){
+  if (!window.Clerk) return;
+  await window.Clerk.load();
+
+  const render = () => {
+    if (clerkUserButton) clerkUserButton.replaceChildren();
+    if (clerkSignIn) clerkSignIn.replaceChildren();
+
+    if (window.Clerk.user && clerkUserButton){
+      window.Clerk.mountUserButton(clerkUserButton);
+      return;
+    }
+    if (clerkSignIn) window.Clerk.mountSignIn(clerkSignIn);
+  };
+
+  render();
+  if (typeof window.Clerk.addListener === "function") window.Clerk.addListener(render);
+}
+
+async function getSessionToken(){
+  if (!window.Clerk?.session) return null;
+  return window.Clerk.session.getToken();
+}
+
+async function authFetch(url, options = {}){
+  const token = await getSessionToken();
+  const headers = new Headers(options.headers || {});
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  // Prevent cached responses during debugging / mobile testing
+  if (!headers.has("Cache-Control")) {
+    headers.set("Cache-Control", "no-store");
+  }
+
+  return fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers
+  });
+}
+
+
+async function readJsonSafe(res){
+  try{
+    return await res.json();
+  }catch(_){
+    return null;
+  }
+}
+
+function ensureCloudStatusEl(){
+  let el = document.getElementById("cloudStatus");
+  if (el) return el;
+
+  const actions = document.querySelector(".modal-actions");
+  if (!actions) return null;
+
+  el = document.createElement("div");
+  el.id = "cloudStatus";
+  el.className = "cloud-status hidden";
+  const note = actions.querySelector(".modal-note");
+  if (note) {
+    actions.insertBefore(el, note);
+  } else {
+    actions.appendChild(el);
+  }
+  return el;
+}
+
+function setCloudStatus(message, type = "error"){
+  const el = ensureCloudStatusEl();
+  if (!el) return;
+  el.textContent = message;
+  el.dataset.type = type;
+  el.classList.remove("hidden");
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => el.classList.add("hidden"), 8000);
+}
+
+function createSongId(){
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function uploadSongToCloud(file, title){
+  setCloudStatus("Uploading to cloud...", "ok");
+
+  const contentType = file.type || "audio/mpeg";
+  const songId = createSongId();
+  const filename = file?.name || `${songId}.mp3`;
+
+  // 1) Ask server for a signed R2 upload URL (POST REQUIRED)
+  const uploadRes = await authFetch("/api/r2-upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      songId,
+      filename,
+      title,
+      contentType
+    })
+  });
+
+  if (uploadRes.status === 401){
+    throw new Error("Not signed in. Please sign in and try again.");
+  }
+
+  if (uploadRes.status === 405){
+    throw new Error("Upload URL endpoint requires POST (405).");
+  }
+
+  if (!uploadRes.ok){
+    const err = await uploadRes.text();
+    throw new Error(`Upload URL failed (${uploadRes.status}): ${err}`);
+  }
+
+  const payload = await uploadRes.json();
+  const uploadUrl = payload.url || payload.uploadUrl;
+  const key = payload.key || payload.r2_key || payload.r2Key;
+
+  if (!uploadUrl || !key){
+    throw new Error("Upload URL response missing url or key.");
+  }
+
+  // 2) Upload MP3 directly to R2
+  const putRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file
+  });
+
+  if (!putRes.ok){
+    throw new Error(`R2 upload failed (${putRes.status})`);
+  }
+
+  // 3) Save metadata to Supabase
+  const metaRes = await authFetch("/api/songs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: songId,
+      title,
+      r2_key: key
+    })
+  });
+
+  if (metaRes.status === 401){
+    throw new Error("Not signed in while saving song metadata.");
+  }
+
+  if (!metaRes.ok){
+    const err = await metaRes.text();
+    throw new Error(`Supabase insert failed (${metaRes.status}): ${err}`);
+  }
+
+  return { songId, r2Key: key };
+}
+
 
 
 /* ============================================================
    Now Playing overlay text (drawn on top of the PNG "Now playing" window)
 ============================================================ */
 function ensureNowPlayingEl(){
+  const direct = document.getElementById("nowPlayingText");
+  if (direct){
+    // If the inline window exists, avoid drawing the overlay mask on top of it.
+    document.getElementById("nowPlayingOverlayText")?.remove();
+    return null;
+  }
+
   let el = document.getElementById("nowPlayingOverlayText");
   if (el) return el;
 
@@ -187,7 +368,7 @@ function playClickSound(){
    Button dim flash (letters + numbers)
    - Adds a brief white "flash" overlay for 1 second when a key is pressed
 ============================================================ */
-const DIM_FLASH_MS = 500;
+const DIM_FLASH_MS = 3000;
 
 function flashDim(btn){
   if (!btn) return;
@@ -231,6 +412,12 @@ const numbersWrap = document.getElementById("numbers");
 
 const prevQueue = document.getElementById("prevQueue");
 const nextQueue = document.getElementById("nextQueue");
+const playingNextText = document.getElementById("playingNextText");
+const transportPrev = document.getElementById("transportPrev");
+const transportPause = document.getElementById("transportPause");
+const transportPlay = document.getElementById("transportPlay");
+const transportStop = document.getElementById("transportStop");
+const transportNext = document.getElementById("transportNext");
 
 /* State */
 const letters = ["A","B","C","D","E","F","G","H"];
@@ -252,22 +439,30 @@ function setNowPlayingConfirmed(title){
   if (el) el.classList.remove("preview");
 }
 
-function showQueuePreview(text){
-  const el = ensureNowPlayingEl();
-  if (!el) return;
+function setPlayingNextText(text){
+  if (!playingNextText) return;
+  const value = (text && String(text).trim()) ? String(text) : "—";
+  playingNextText.textContent = value;
+}
 
-  el.classList.add("preview");
+function updatePlayingNext(){
+  if (queue.length === 0 || queueCursor < 0){
+    browseCursor = -1;
+    setPlayingNextText("—");
+    return;
+  }
 
-  // Temporarily replace label text
-  if (label) label.textContent = "IN QUEUE:";
+  const nextIndex = queueCursor + 1;
+  if (nextIndex >= queue.length){
+    browseCursor = -1;
+    setPlayingNextText("—");
+    return;
+  }
 
-  setNowPlayingText(text);
-
-  if (_previewTimer) clearTimeout(_previewTimer);
-  _previewTimer = setTimeout(() => {
-    // Restore confirmed now playing
-    setNowPlayingConfirmed(_nowPlayingTitle);
-  }, 1600);
+  if (browseCursor < nextIndex || browseCursor >= queue.length){
+    browseCursor = nextIndex;
+  }
+  setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
 }
 
 
@@ -439,6 +634,7 @@ const onLetterPress = (e) => {
   playClickSound();
   flashDim(btn);
   selectedLetter = btn.dataset.letter;
+  setNowPlayingText(selectedLetter);
 };
 
 const onNumberPress = async (e) => {
@@ -448,6 +644,9 @@ const onNumberPress = async (e) => {
   playClickSound();
   flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
+  const rec = await dbGet(code);
+  const title = resolveSlotTitle(code, rec);
+  setNowPlayingText(title);
   await queueSong(code);
 };
 
@@ -463,6 +662,51 @@ const onCardPress = async (e) => {
 addPressListener(lettersWrap, onLetterPress);
 addPressListener(numbersWrap, onNumberPress);
 addPressListener(front, onCardPress);
+addPressListener(transportPrev, async () => {
+  playClickSound();
+  if (queue.length === 0) return;
+  if (queueCursor > 0){
+    queueCursor -= 1;
+    browseCursor = queueCursor;
+    await playSlot(queue[queueCursor].code, true);
+  } else if (audioPlayer) {
+    audioPlayer.pause();
+    try { audioPlayer.currentTime = 0; } catch(_) {}
+  }
+});
+addPressListener(transportPause, () => {
+  playClickSound();
+  audioPlayer?.pause();
+});
+addPressListener(transportPlay, async () => {
+  playClickSound();
+  if (queue.length === 0) return;
+  if (queueCursor < 0) queueCursor = 0;
+  browseCursor = queueCursor;
+  if (audioPlayer?.paused && audioPlayer.src){
+    await audioPlayer.play().catch(()=>{});
+    return;
+  }
+  await playSlot(queue[queueCursor].code, true);
+});
+addPressListener(transportStop, () => {
+  playClickSound();
+  if (!audioPlayer) return;
+  audioPlayer.pause();
+  try { audioPlayer.currentTime = 0; } catch(_) {}
+});
+addPressListener(transportNext, async () => {
+  playClickSound();
+  if (queue.length === 0) return;
+  if (queueCursor < queue.length - 1){
+    queueCursor += 1;
+    browseCursor = queueCursor;
+    await playSlot(queue[queueCursor].code, true);
+  } else if (audioPlayer) {
+    audioPlayer.pause();
+    try { audioPlayer.currentTime = 0; } catch(_) {}
+  }
+});
 
 
 async function queueSong(code){
@@ -481,7 +725,9 @@ async function queueSong(code){
   if (!isAudioPlaying() && queueCursor < 0){
     queueCursor = 0;
     browseCursor = queueCursor;
+    setNowPlayingText(title);
     await playSlot(queue[queueCursor].code, /*userInitiated*/ true);
+    updatePlayingNext();
     return;
   }
 
@@ -493,22 +739,35 @@ async function queueSong(code){
   // Keep "Now playing" showing the current track
   const current = queue[queueCursor];
   if (current) setNowPlayingText(current.title);
+  updatePlayingNext();
 }
 
 
 
 
 prevQueue?.addEventListener("click", () => {
-  if (queue.length === 0) return;
-  if (browseCursor < 0) browseCursor = queueCursor >= 0 ? queueCursor : 0;
-  browseCursor = Math.max(0, browseCursor - 1);
-  showQueuePreview(queue[browseCursor].title || queue[browseCursor].code);
+  if (queue.length === 0 || queueCursor < 0) return;
+  const minIndex = queueCursor + 1;
+  if (minIndex >= queue.length){
+    setPlayingNextText("—");
+    browseCursor = -1;
+    return;
+  }
+  if (browseCursor < minIndex) browseCursor = minIndex;
+  browseCursor = Math.max(minIndex, browseCursor - 1);
+  setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
 });
 nextQueue?.addEventListener("click", () => {
-  if (queue.length === 0) return;
-  if (browseCursor < 0) browseCursor = queueCursor >= 0 ? queueCursor : 0;
+  if (queue.length === 0 || queueCursor < 0) return;
+  const minIndex = queueCursor + 1;
+  if (minIndex >= queue.length){
+    setPlayingNextText("—");
+    browseCursor = -1;
+    return;
+  }
+  if (browseCursor < minIndex) browseCursor = minIndex;
   browseCursor = Math.min(queue.length - 1, browseCursor + 1);
-  showQueuePreview(queue[browseCursor].title || queue[browseCursor].code);
+  setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
 });
 
 
@@ -518,6 +777,7 @@ async function playSlot(code, userInitiated = false){
 
   const title = rec.title || titleFromFilename(rec.fileName || code);
   _pendingNowPlayingTitle = title;
+  setNowPlayingText(title);
 
   const url = URL.createObjectURL(rec.blob);
   audioPlayer.src = url;
@@ -530,6 +790,7 @@ async function playSlot(code, userInitiated = false){
 }
 
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  updatePlayingNext();
 }
 
 
@@ -593,6 +854,20 @@ function makeSlotRow(slot){
 
     await refreshPagesFromDB();
     renderCurrent();
+
+    try{
+      const cloud = await uploadSongToCloud(file, title);
+      const rec = await dbGet(slot);
+      if (rec){
+        rec.song_id = cloud.songId;
+        rec.r2_key = cloud.r2Key;
+        await dbPut(rec);
+      }
+      setCloudStatus("Saved to cloud", "ok");
+    }catch(err){
+      console.warn("Cloud upload failed", err);
+      setCloudStatus(err?.message || "Cloud upload failed", "error");
+    }
   });
 
   input.addEventListener("change", async () => {
@@ -687,6 +962,7 @@ clearAllBtn?.addEventListener("click", async () => {
 (async function init(){
   buildKeys();
   bindPaging();
+  await initClerkAuth();
 
   // Toggle hotspot outlines for alignment: press "d"
   window.addEventListener("keydown", (e) => {
@@ -706,6 +982,7 @@ audioPlayer?.addEventListener("ended", async () => {
   } else {
     setNowPlayingConfirmed("—");
     browseCursor = -1;
+    setPlayingNextText("—");
   }
 });
 
@@ -716,5 +993,6 @@ audioPlayer?.addEventListener("ended", async () => {
   ensureNowPlayingEl();
   setNowPlayingConfirmed("—");
     browseCursor = -1;
+  setPlayingNextText("—");
   await populateLoader();
 })();

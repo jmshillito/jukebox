@@ -953,7 +953,7 @@ clearAllBtn?.addEventListener("click", async () => {
   });
 
 
-  ensureNowPlayingEl();
+  //ensureNowPlayingEl();
 
 // Auto-advance when a track finishes
 audioPlayer?.addEventListener("ended", async () => {
@@ -973,7 +973,7 @@ audioPlayer?.addEventListener("ended", async () => {
   pages = makeEmptyPages();
   await refreshPagesFromDB();
   renderCurrent();
-  ensureNowPlayingEl();
+  //ensureNowPlayingEl();
   setNowPlayingConfirmed("—");
     browseCursor = -1;
   setPlayingNextText("—");

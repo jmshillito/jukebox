@@ -119,9 +119,25 @@ async function initClerkAuth(){
 }
 
 async function getSessionToken(){
-  if (!window.Clerk?.session) return null;
+  if (!window.Clerk) return null;
+
+  // Ensure Clerk is loaded
+  try { await window.Clerk.load(); } catch(_) {}
+
+  // If no active session, prompt sign-in
+  if (!window.Clerk.session) {
+    // show sign-in UI (preferred)
+    if (clerkSignIn && !clerkSignIn.hasChildNodes()) {
+      window.Clerk.mountSignIn(clerkSignIn, { redirectUrl: window.location.href });
+    } else {
+      window.Clerk.openSignIn();
+    }
+    return null;
+  }
+
   return window.Clerk.session.getToken();
 }
+
 
 async function authFetch(url, options = {}){
   const token = await getSessionToken();
@@ -777,8 +793,11 @@ async function playSlot(code, userInitiated = false){
 }
 
 
-/* Loader modal */
-function openLoader(){ loaderModal.classList.remove("hidden"); }
+async function openLoader(){
+  loaderModal.classList.remove("hidden");
+  try { await populateLoader(); } catch (e) { console.error(e); }
+}
+
 function closeLoaderUI(){ loaderModal.classList.add("hidden"); }
 
 hamburger?.addEventListener("click", openLoader);

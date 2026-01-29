@@ -1,0 +1,105 @@
+diff --git a/jukebox-rolodex/rolodex_AH.js b/jukebox-rolodex/rolodex_AH.js
+--- a/jukebox-rolodex/rolodex_AH.js
++++ b/jukebox-rolodex/rolodex_AH.js
+@@
+-async function authFetch(url, options = {}){
+-  const token = await getSessionToken();
+-  const headers = new Headers(options.headers || {});
+-  if (token) headers.set("Authorization", `Bearer ${token}`);
+-  return fetch(url, { ...options, headers });
+-}
++async function authFetch(url, options = {}){
++  const token = await getSessionToken();
++  const headers = new Headers(options.headers || {});
++  if (token) headers.set("Authorization", `Bearer ${token}`);
++  // prevent any weird caching during debugging
++  if (!headers.has("Cache-Control")) headers.set("Cache-Control", "no-store");
++  return fetch(url, { cache: "no-store", ...options, headers });
++}
+@@
+-async function uploadSongToCloud(file, title){
+-  setCloudStatus("Uploading to cloud...", "ok");
+-  const contentType = file.type || "audio/mpeg";
+-  const songId = createSongId();
+-
+-  // Ask server for signed upload URL
+-  const uploadRes = await authFetch("/api/r2-upload-url");
+-  if (!uploadRes.ok) throw new Error("Upload URL failed");
+-  const { uploadUrl, key } = await uploadRes.json();
+-
+-  // Upload to R2
+-  const putRes = await fetch(uploadUrl, {
+-    method: "PUT",
+-    headers: { "Content-Type": contentType },
+-    body: file
+-  });
+-  if (!putRes.ok) throw new Error("R2 upload failed");
+-
+-  // Save metadata to Supabase
+-  const metaRes = await authFetch("/api/songs", {
+-    method: "POST",
+-    headers: { "Content-Type": "application/json" },
+-    body: JSON.stringify({ id: songId, title, r2_key: key })
+-  });
+-  if (!metaRes.ok) throw new Error("Supabase insert failed");
+-
+-  return { songId, r2Key: key };
+-}
++async function uploadSongToCloud(file, title){
++  setCloudStatus("Uploading to cloud...", "ok");
++  const contentType = file.type || "audio/mpeg";
++  const songId = createSongId();
++  const filename = file?.name || `${songId}.mp3`;
++
++  // 1) Ask server for a signed R2 upload URL (MUST be POST)
++  const uploadRes = await authFetch("/api/r2-upload-url", {
++    method: "POST",
++    headers: { "Content-Type": "application/json" },
++    // Send multiple common fields so the API can choose what it expects
++    body: JSON.stringify({ songId, filename, title, contentType })
++  });
++
++  if (uploadRes.status === 401){
++    throw new Error("Not signed in (missing Clerk token). Please sign in and try again.");
++  }
++  if (uploadRes.status === 405){
++    throw new Error("Upload URL endpoint expects POST. (Got 405) — check the request method.");
++  }
++  if (!uploadRes.ok) {
++    const payload = await readJsonSafe(uploadRes);
++    throw new Error(payload?.error || `Upload URL failed (${uploadRes.status})`);
++  }
++
++  const payload = await uploadRes.json();
++  const url = payload.url || payload.uploadUrl;
++  const key = payload.key || payload.r2_key || payload.r2Key;
++
++  if (!url || !key){
++    throw new Error("Upload URL response missing `url`/`key` (check /api/r2-upload-url response shape).");
++  }
++
++  // 2) Upload the MP3 directly to R2 via the signed URL
++  const putRes = await fetch(url, {
++    method: "PUT",
++    headers: { "Content-Type": contentType },
++    body: file
++  });
++  if (!putRes.ok) throw new Error(`R2 upload failed (${putRes.status})`);
++
++  // 3) Save metadata to Supabase
++  const metaRes = await authFetch("/api/songs", {
++    method: "POST",
++    headers: { "Content-Type": "application/json" },
++    body: JSON.stringify({ id: songId, title, r2_key: key })
++  });
++
++  if (metaRes.status === 401){
++    throw new Error("Not signed in (missing Clerk token) when saving to Supabase. Please sign in and try again.");
++  }
++  if (!metaRes.ok) {
++    const mp = await readJsonSafe(metaRes);
++    throw new Error(mp?.error || `Supabase insert failed (${metaRes.status})`);
++  }
++
++  return { songId, r2Key: key };
++}

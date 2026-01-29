@@ -240,10 +240,6 @@ body: file,
 
 /* ============================================================
    Now Playing overlay text (drawn on top of the PNG "Now playing" window)
-============================================================ */
-
-   Now Playing overlay text (drawn on top of the PNG "Now playing" window)
-============================================================ */
 function ensureNowPlayingEl(){
   const direct = document.getElementById("nowPlayingText");
   if (direct){

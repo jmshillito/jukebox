@@ -96,17 +96,22 @@ const clerkSignIn = document.getElementById("clerk-signin");
 
 async function initClerkAuth(){
   if (!window.Clerk) return;
+
   await window.Clerk.load();
 
   const render = () => {
     if (clerkUserButton) clerkUserButton.replaceChildren();
     if (clerkSignIn) clerkSignIn.replaceChildren();
 
-    if (window.Clerk.user && clerkUserButton){
-      window.Clerk.mountUserButton(clerkUserButton);
-      return;
+    if (window.Clerk.user) {
+      if (clerkUserButton) window.Clerk.mountUserButton(clerkUserButton);
+    } else {
+      if (clerkSignIn) {
+        window.Clerk.mountSignIn(clerkSignIn, { redirectUrl: window.location.href });
+      } else {
+        window.Clerk.openSignIn();
+      }
     }
-    if (clerkSignIn) window.Clerk.mountSignIn(clerkSignIn);
   };
 
   render();
@@ -122,19 +127,10 @@ async function authFetch(url, options = {}){
   const token = await getSessionToken();
   const headers = new Headers(options.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  // Prevent cached responses during debugging / mobile testing
-  if (!headers.has("Cache-Control")) {
-    headers.set("Cache-Control", "no-store");
-  }
-
-  return fetch(url, {
-    cache: "no-store",
-    ...options,
-    headers
-  });
+  // prevent any weird caching during debugging
+  if (!headers.has("Cache-Control")) headers.set("Cache-Control", "no-store");
+  return fetch(url, { cache: "no-store", ...options, headers });
 }
-
 
 async function readJsonSafe(res){
   try{
@@ -180,84 +176,72 @@ function createSongId(){
 
 async function uploadSongToCloud(file, title){
   setCloudStatus("Uploading to cloud...", "ok");
-
   const contentType = file.type || "audio/mpeg";
   const songId = createSongId();
   const filename = file?.name || `${songId}.mp3`;
 
-  // 1) Ask server for a signed R2 upload URL (POST REQUIRED)
-  console.log("Calling /api/r2-upload-url…");
-let uploadRes;
-try {
-  uploadRes = await authFetch("/api/r2-upload-url", {
+  // 1) Ask server for a signed R2 upload URL (MUST be POST)
+  const uploadRes = await authFetch("/api/r2-upload-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ songId, filename, title, contentType })
+    // Send multiple common fields so the API can choose what it expects
+    body: JSON.stringify({ songId, filename, title, contentType }),
   });
-  console.log("uploadRes status:", uploadRes.status);
-} catch (e) {
-  console.error("Fetch to /api/r2-upload-url FAILED:", e);
-  throw e;
-}
 
   if (uploadRes.status === 401){
-    throw new Error("Not signed in. Please sign in and try again.");
+    throw new Error("Not signed in (missing Clerk token). Please sign in and try again.");
   }
-
   if (uploadRes.status === 405){
-    throw new Error("Upload URL endpoint requires POST (405).");
+    throw new Error("Upload URL endpoint expects POST. (Got 405) — check the request method.");
   }
-
-  if (!uploadRes.ok){
-    const err = await uploadRes.text();
-    throw new Error(`Upload URL failed (${uploadRes.status}): ${err}`);
+  if (!uploadRes.ok) {
+    const payload = await readJsonSafe(uploadRes);
+    throw new Error(payload?.error || `Upload URL failed (${uploadRes.status})`);
   }
 
   const payload = await uploadRes.json();
-  const uploadUrl = payload.url || payload.uploadUrl;
+  const url = payload.url || payload.uploadUrl;
   const key = payload.key || payload.r2_key || payload.r2Key;
 
-  if (!uploadUrl || !key){
-    throw new Error("Upload URL response missing url or key.");
+  if (!url || !key){
+    throw new Error("Upload URL response missing `url`/`key` (check /api/r2-upload-url response shape).");
   }
 
-  // 2) Upload MP3 directly to R2
-  const putRes = await fetch(uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": contentType },
-    body: file
-  });
-
-  if (!putRes.ok){
-    throw new Error(`R2 upload failed (${putRes.status})`);
-  }
-
-  // 3) Save metadata to Supabase
+      // 2) Upload the MP3 directly to R2 via the signed URL
+    let putRes;
+    try {
+      putRes = await fetch(url, {
+method: "PUT",
+headers: { "Content-Type": contentType },
+body: file,
+      });
+    } catch (e) {
+      throw new Error("R2 PUT failed to fetch (CORS likely). Add CORS rules on your R2 bucket for your Vercel domain(s).");
+    }
+    if (!putRes.ok) throw new Error(`R2 upload failed (${putRes.status})`);
+// 3) Save metadata to Supabase
   const metaRes = await authFetch("/api/songs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: songId,
-      title,
-      r2_key: key
-    })
+    body: JSON.stringify({ id: songId, title, r2_key: key }),
   });
 
   if (metaRes.status === 401){
-    throw new Error("Not signed in while saving song metadata.");
+    throw new Error("Not signed in (missing Clerk token) when saving to Supabase. Please sign in and try again.");
   }
-
-  if (!metaRes.ok){
-    const err = await metaRes.text();
-    throw new Error(`Supabase insert failed (${metaRes.status}): ${err}`);
+  if (!metaRes.ok) {
+    const mp = await readJsonSafe(metaRes);
+    throw new Error(mp?.error || `Supabase insert failed (${metaRes.status})`);
   }
 
   return { songId, r2Key: key };
 }
 
 
-
 /* ============================================================
+   Now Playing overlay text (drawn on top of the PNG "Now playing" window)
+============================================================ */
+
    Now Playing overlay text (drawn on top of the PNG "Now playing" window)
 ============================================================ */
 function ensureNowPlayingEl(){
@@ -960,20 +944,6 @@ clearAllBtn?.addEventListener("click", async () => {
   renderCurrent();
   await populateLoader();
 });
-
-await Clerk.load();
-
-if (!Clerk.user) {
-  // show sign-in
-  Clerk.mountSignIn(document.getElementById("clerk-signin"), {
-    redirectUrl: window.location.href,
-  });
-} else {
-  // show user button
-  Clerk.mountUserButton(document.getElementById("clerk-user-button"));
-}
-
-
 
 /* Init */
 (async function init(){

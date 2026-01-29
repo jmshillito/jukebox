@@ -961,6 +961,20 @@ clearAllBtn?.addEventListener("click", async () => {
   await populateLoader();
 });
 
+await Clerk.load();
+
+if (!Clerk.user) {
+  // show sign-in
+  Clerk.mountSignIn(document.getElementById("clerk-signin"), {
+    redirectUrl: window.location.href,
+  });
+} else {
+  // show user button
+  Clerk.mountUserButton(document.getElementById("clerk-user-button"));
+}
+
+
+
 /* Init */
 (async function init(){
   buildKeys();

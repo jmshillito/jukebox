@@ -7,8 +7,15 @@
 
   <!-- App CSS -->
   <link rel="stylesheet" href="rolodex_AH.css" />
+
 </head>
 <body>
+
+  <!-- Auth UI -->
+  <div class="auth-ui" aria-live="polite">
+    <div id="clerk-user-button"></div>
+    <div id="clerk-signin"></div>
+  </div>
 
   <!-- Hamburger (opens loader) -->
   <button id="hamburger" class="hamburger" aria-label="Open menu" title="Load songs">
@@ -30,7 +37,6 @@
 
       <div class="modal-actions">
         <button id="autoFillByName" class="btn" type="button">Auto-assign sequentially (A1…H8)</button>
-        <button id="autoFillRandom" class="btn" type="button">Auto-assign randomly (A1…H8)</button>
         <button id="clearAll" class="btn btn-danger" type="button">Clear all slots</button>
         <div class="modal-note">Saved locally in your browser (IndexedDB)</div>
       </div>
@@ -54,9 +60,9 @@
 
   <!-- Jukebox image + overlay UI -->
   <div class="stage">
-    <div class="jukebox-frame">
-      <img class="jukebox-img" src="jukebox.png" alt="Jukebox UI" />
+    <img class="jukebox-img stage-bg" src="/jukebox.png" alt="Jukebox UI" />
 
+    <div class="cards">
       <div class="overlay">
       <!-- TOP red-arrow hotspots -->
       <button class="hotspot hotspot-left" id="pageLeft" aria-label="Flip left"></button>
@@ -72,6 +78,7 @@
           <div class="face back" id="back"></div>
         </div>
       </div>
+      <div class="rolodex-banner" aria-hidden="true">Retro Jukebox</div>
 
       <!-- Keypad -->
       <div class="keypad">
@@ -92,11 +99,33 @@
         <button class="nav-btn" id="nextQueue" aria-label="Next queued song" type="button"></button>
       </div>
 
+      <!-- Playing Next window -->
+      <div class="playing-next-window">
+        <div class="playing-next-text" id="playingNextText">—</div>
+      </div>
+
+      <!-- Transport controls -->
+      <div class="transport">
+        <button class="transport-btn" id="transportPrev" aria-label="Previous track" type="button"></button>
+        <button class="transport-btn" id="transportPause" aria-label="Pause" type="button"></button>
+        <button class="transport-btn" id="transportPlay" aria-label="Play" type="button"></button>
+        <button class="transport-btn" id="transportStop" aria-label="Stop" type="button"></button>
+        <button class="transport-btn" id="transportNext" aria-label="Next track" type="button"></button>
+      </div>
+
       <!-- Audio element required by JS -->
       <audio id="audioPlayer"></audio>
       </div>
     </div>
   </div>
+
+  <!-- Clerk Auth -->
+  <script
+    defer
+    crossorigin="anonymous"
+    data-clerk-publishable-key="pk_test_ZGlzY3JldGUtb3Jpb2xlLTIxLmNsZXJrLmFjY291bnRzLmRldiQ"
+    src="https://discrete-oriole-21.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
+  </script>
 
   <!-- Use defer so DOM exists before init() runs -->
   <script defer src="rolodex_AH.js"></script>

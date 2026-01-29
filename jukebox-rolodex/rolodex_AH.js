@@ -186,16 +186,19 @@ async function uploadSongToCloud(file, title){
   const filename = file?.name || `${songId}.mp3`;
 
   // 1) Ask server for a signed R2 upload URL (POST REQUIRED)
-  const uploadRes = await authFetch("/api/r2-upload-url", {
+  console.log("Calling /api/r2-upload-url…");
+let uploadRes;
+try {
+  uploadRes = await authFetch("/api/r2-upload-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      songId,
-      filename,
-      title,
-      contentType
-    })
+    body: JSON.stringify({ songId, filename, title, contentType })
   });
+  console.log("uploadRes status:", uploadRes.status);
+} catch (e) {
+  console.error("Fetch to /api/r2-upload-url FAILED:", e);
+  throw e;
+}
 
   if (uploadRes.status === 401){
     throw new Error("Not signed in. Please sign in and try again.");

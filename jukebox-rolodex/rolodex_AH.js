@@ -122,8 +122,19 @@ async function authFetch(url, options = {}){
   const token = await getSessionToken();
   const headers = new Headers(options.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  return fetch(url, { ...options, headers });
+
+  // Prevent cached responses during debugging / mobile testing
+  if (!headers.has("Cache-Control")) {
+    headers.set("Cache-Control", "no-store");
+  }
+
+  return fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers
+  });
 }
+
 
 async function readJsonSafe(res){
   try{
@@ -169,39 +180,78 @@ function createSongId(){
 
 async function uploadSongToCloud(file, title){
   setCloudStatus("Uploading to cloud...", "ok");
+
   const contentType = file.type || "audio/mpeg";
   const songId = createSongId();
+  const filename = file?.name || `${songId}.mp3`;
 
+  // 1) Ask server for a signed R2 upload URL (POST REQUIRED)
   const uploadRes = await authFetch("/api/r2-upload-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ songId, contentType }),
+    body: JSON.stringify({
+      songId,
+      filename,
+      title,
+      contentType
+    })
   });
-  if (!uploadRes.ok) {
-    const payload = await readJsonSafe(uploadRes);
-    throw new Error(payload?.error || `Upload URL failed (${uploadRes.status})`);
+
+  if (uploadRes.status === 401){
+    throw new Error("Not signed in. Please sign in and try again.");
   }
 
-  const { url, key } = await uploadRes.json();
-  const putRes = await fetch(url, {
+  if (uploadRes.status === 405){
+    throw new Error("Upload URL endpoint requires POST (405).");
+  }
+
+  if (!uploadRes.ok){
+    const err = await uploadRes.text();
+    throw new Error(`Upload URL failed (${uploadRes.status}): ${err}`);
+  }
+
+  const payload = await uploadRes.json();
+  const uploadUrl = payload.url || payload.uploadUrl;
+  const key = payload.key || payload.r2_key || payload.r2Key;
+
+  if (!uploadUrl || !key){
+    throw new Error("Upload URL response missing url or key.");
+  }
+
+  // 2) Upload MP3 directly to R2
+  const putRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: { "Content-Type": contentType },
-    body: file,
+    body: file
   });
-  if (!putRes.ok) throw new Error(`R2 upload failed (${putRes.status})`);
 
+  if (!putRes.ok){
+    throw new Error(`R2 upload failed (${putRes.status})`);
+  }
+
+  // 3) Save metadata to Supabase
   const metaRes = await authFetch("/api/songs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: songId, title, r2_key: key }),
+    body: JSON.stringify({
+      id: songId,
+      title,
+      r2_key: key
+    })
   });
-  if (!metaRes.ok) {
-    const payload = await readJsonSafe(metaRes);
-    throw new Error(payload?.error || `Supabase insert failed (${metaRes.status})`);
+
+  if (metaRes.status === 401){
+    throw new Error("Not signed in while saving song metadata.");
+  }
+
+  if (!metaRes.ok){
+    const err = await metaRes.text();
+    throw new Error(`Supabase insert failed (${metaRes.status}): ${err}`);
   }
 
   return { songId, r2Key: key };
 }
+
 
 
 /* ============================================================

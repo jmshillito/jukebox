@@ -642,10 +642,18 @@ const onNumberPress = async (e) => {
 
   playClickSound();
   flashDim(btn);
+
   const code = `${selectedLetter}${btn.dataset.number}`;
+
+  // Show slot code immediately for alignment feedback
+  setNowPlayingText(code);
+
   const rec = await dbGet(code);
   const title = resolveSlotTitle(code, rec);
+
+  // Update to title (will be confirmed again on playback)
   setNowPlayingText(title);
+
   await queueSong(code);
 };
 

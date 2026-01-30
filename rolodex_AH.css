@@ -208,6 +208,28 @@ body{
   z-index: 10;
   pointer-events: auto;
 }
+/* ============================================================
+   Mobile overlay alignment correction
+   - Moves ALL hotspots together to match scaled PNG
+   - Prevents per-button drift
+============================================================ */
+
+:root{
+  --overlay-shift-x: 0px;
+  --overlay-shift-y: 0px;
+}
+
+@media (max-width: 600px){
+  :root{
+    /* ↓ tune these two values only */
+    --overlay-shift-x: -14px; /* move LEFT */
+    --overlay-shift-y: 18px;  /* move DOWN */
+  }
+}
+
+.overlay{
+  transform: translate(var(--overlay-shift-x), var(--overlay-shift-y));
+}
 
 /* Hotspots + dial */
 .hotspot, .dial-hotspot{

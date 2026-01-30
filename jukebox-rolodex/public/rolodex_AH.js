@@ -1,3 +1,9 @@
+// Prevent double-loading (can happen if two index files include the script)
+if (window.__ROLODEX_AH_LOADED) {
+  console.warn("rolodex_AH.js already loaded — skipping duplicate execution.");
+} else {
+  window.__ROLODEX_AH_LOADED = true;
+  (function(){
 console.log("rolodex_AH_with_loader_fixed.js loaded ✅");
 
 /* IndexedDB: stores MP3 blobs + titles per slot */
@@ -93,34 +99,20 @@ const audioPlayer = document.getElementById("audioPlayer");
 const clerkUserButton = document.getElementById("clerk-user-button");
 const clerkSignIn = document.getElementById("clerk-signin");
 
-document.addEventListener("click", (e) => {
-  const t = e.target;
-  const tag = t?.tagName?.toLowerCase();
-  const id = t?.id ? `#${t.id}` : "";
-  const cls = t?.className ? `.${String(t.className).trim().replace(/\s+/g, ".")}` : "";
-  console.log("CLICK:", tag, id, cls);
-}, true);
-
-
 
 async function initClerkAuth(){
   if (!window.Clerk) return;
-
   await window.Clerk.load();
 
   const render = () => {
     if (clerkUserButton) clerkUserButton.replaceChildren();
     if (clerkSignIn) clerkSignIn.replaceChildren();
 
-    if (window.Clerk.user) {
-      if (clerkUserButton) window.Clerk.mountUserButton(clerkUserButton);
-    } else {
-      if (clerkSignIn) {
-        window.Clerk.mountSignIn(clerkSignIn, { redirectUrl: window.location.href });
-      } else {
-        window.Clerk.openSignIn();
-      }
+    if (window.Clerk.user && clerkUserButton){
+      window.Clerk.mountUserButton(clerkUserButton);
+      return;
     }
+    if (clerkSignIn) window.Clerk.mountSignIn(clerkSignIn);
   };
 
   render();
@@ -128,33 +120,15 @@ async function initClerkAuth(){
 }
 
 async function getSessionToken(){
-  if (!window.Clerk) return null;
-
-  // Ensure Clerk is loaded
-  try { await window.Clerk.load(); } catch(_) {}
-
-  // If no active session, prompt sign-in
-  if (!window.Clerk.session) {
-    // show sign-in UI (preferred)
-    if (clerkSignIn && !clerkSignIn.hasChildNodes()) {
-      window.Clerk.mountSignIn(clerkSignIn, { redirectUrl: window.location.href });
-    } else {
-      window.Clerk.openSignIn();
-    }
-    return null;
-  }
-
+  if (!window.Clerk?.session) return null;
   return window.Clerk.session.getToken();
 }
-
 
 async function authFetch(url, options = {}){
   const token = await getSessionToken();
   const headers = new Headers(options.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  // prevent any weird caching during debugging
-  if (!headers.has("Cache-Control")) headers.set("Cache-Control", "no-store");
-  return fetch(url, { cache: "no-store", ...options, headers });
+  return fetch(url, { ...options, headers });
 }
 
 async function readJsonSafe(res){
@@ -203,60 +177,33 @@ async function uploadSongToCloud(file, title){
   setCloudStatus("Uploading to cloud...", "ok");
   const contentType = file.type || "audio/mpeg";
   const songId = createSongId();
-  const filename = file?.name || `${songId}.mp3`;
 
-  // 1) Ask server for a signed R2 upload URL (MUST be POST)
   const uploadRes = await authFetch("/api/r2-upload-url", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    // Send multiple common fields so the API can choose what it expects
-    body: JSON.stringify({ songId, filename, title, contentType }),
+    body: JSON.stringify({ songId, contentType }),
   });
-
-  if (uploadRes.status === 401){
-    throw new Error("Not signed in (missing Clerk token). Please sign in and try again.");
-  }
-  if (uploadRes.status === 405){
-    throw new Error("Upload URL endpoint expects POST. (Got 405) — check the request method.");
-  }
   if (!uploadRes.ok) {
     const payload = await readJsonSafe(uploadRes);
     throw new Error(payload?.error || `Upload URL failed (${uploadRes.status})`);
   }
 
-  const payload = await uploadRes.json();
-  const url = payload.url || payload.uploadUrl;
-  const key = payload.key || payload.r2_key || payload.r2Key;
+  const { url, key } = await uploadRes.json();
+  const putRes = await fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error(`R2 upload failed (${putRes.status})`);
 
-  if (!url || !key){
-    throw new Error("Upload URL response missing `url`/`key` (check /api/r2-upload-url response shape).");
-  }
-
-      // 2) Upload the MP3 directly to R2 via the signed URL
-    let putRes;
-    try {
-      putRes = await fetch(url, {
-method: "PUT",
-headers: { "Content-Type": contentType },
-body: file,
-      });
-    } catch (e) {
-      throw new Error("R2 PUT failed to fetch (CORS likely). Add CORS rules on your R2 bucket for your Vercel domain(s).");
-    }
-    if (!putRes.ok) throw new Error(`R2 upload failed (${putRes.status})`);
-// 3) Save metadata to Supabase
   const metaRes = await authFetch("/api/songs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: songId, title, r2_key: key }),
   });
-
-  if (metaRes.status === 401){
-    throw new Error("Not signed in (missing Clerk token) when saving to Supabase. Please sign in and try again.");
-  }
   if (!metaRes.ok) {
-    const mp = await readJsonSafe(metaRes);
-    throw new Error(mp?.error || `Supabase insert failed (${metaRes.status})`);
+    const payload = await readJsonSafe(metaRes);
+    throw new Error(payload?.error || `Supabase insert failed (${metaRes.status})`);
   }
 
   return { songId, r2Key: key };
@@ -265,6 +212,7 @@ body: file,
 
 /* ============================================================
    Now Playing overlay text (drawn on top of the PNG "Now playing" window)
+============================================================ */
 function ensureNowPlayingEl(){
   const direct = document.getElementById("nowPlayingText");
   if (direct){
@@ -651,18 +599,13 @@ const onNumberPress = async (e) => {
 
   playClickSound();
   flashDim(btn);
-
   const code = `${selectedLetter}${btn.dataset.number}`;
 
   // Show slot code immediately for alignment feedback
   setNowPlayingText(code);
-
   const rec = await dbGet(code);
   const title = resolveSlotTitle(code, rec);
-
-  // Update to title (will be confirmed again on playback)
   setNowPlayingText(title);
-
   await queueSong(code);
 };
 
@@ -810,11 +753,8 @@ async function playSlot(code, userInitiated = false){
 }
 
 
-async function openLoader(){
-  loaderModal.classList.remove("hidden");
-  try { await populateLoader(); } catch (e) { console.error(e); }
-}
-
+/* Loader modal */
+function openLoader(){ loaderModal.classList.remove("hidden"); }
 function closeLoaderUI(){ loaderModal.classList.add("hidden"); }
 
 hamburger?.addEventListener("click", openLoader);
@@ -989,7 +929,7 @@ clearAllBtn?.addEventListener("click", async () => {
   });
 
 
-  //ensureNowPlayingEl();
+  ensureNowPlayingEl();
 
 // Auto-advance when a track finishes
 audioPlayer?.addEventListener("ended", async () => {
@@ -1009,9 +949,12 @@ audioPlayer?.addEventListener("ended", async () => {
   pages = makeEmptyPages();
   await refreshPagesFromDB();
   renderCurrent();
-  //ensureNowPlayingEl();
+  ensureNowPlayingEl();
   setNowPlayingConfirmed("—");
     browseCursor = -1;
   setPlayingNextText("—");
   await populateLoader();
 })();
+
+})();
+}

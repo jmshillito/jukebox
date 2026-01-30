@@ -138,6 +138,7 @@ async function getSessionToken(){
   return window.Clerk.session.getToken();
 }
 
+
 async function authFetch(url, options = {}){
   const token = await getSessionToken();
   const headers = new Headers(options.headers || {});
@@ -796,7 +797,6 @@ async function openLoader(){
   loaderModal.classList.remove("hidden");
   try { await populateLoader(); } catch (e) { console.error(e); }
 }
-
 
 function closeLoaderUI(){ loaderModal.classList.add("hidden"); }
 

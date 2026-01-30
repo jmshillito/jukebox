@@ -185,6 +185,33 @@ body{
 .row-actions{ display:flex; gap: 8px; justify-content:flex-end; }
 .small{ font-size: 13px; padding: 9px 11px; border-radius: 12px; }
 
+
+/* MOBILE TAP FIX: ensure overlay is above background image */
+.stage {
+  position: relative;
+}
+
+.jukebox-img,
+.stage-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;   /* key fix: image cannot steal taps */
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+#letters, #numbers, .key, .song-card,
+#pageLeft, #pageRight, #dial {
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
 /* ------------------------------------------------------------
    Stage (centered, unaffected by modal)
 ------------------------------------------------------------ */

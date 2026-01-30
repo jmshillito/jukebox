@@ -93,6 +93,15 @@ const audioPlayer = document.getElementById("audioPlayer");
 const clerkUserButton = document.getElementById("clerk-user-button");
 const clerkSignIn = document.getElementById("clerk-signin");
 
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  const tag = t?.tagName?.toLowerCase();
+  const id = t?.id ? `#${t.id}` : "";
+  const cls = t?.className ? `.${String(t.className).trim().replace(/\s+/g, ".")}` : "";
+  console.log("CLICK:", tag, id, cls);
+}, true);
+
+
 
 async function initClerkAuth(){
   if (!window.Clerk) return;

@@ -974,10 +974,6 @@ clearAllBtn?.addEventListener("click", async () => {
   bindPaging();
   await initClerkAuth();
 
-setNowPlayingText("READY");
-
-
-
   // Toggle hotspot outlines for alignment: press "d"
   window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "d") document.body.classList.toggle("debug-hotspots");

@@ -553,10 +553,10 @@ body.debug-hotspots #dial::before{
   --next-h: 13.3%;
 }
 
-/* Move the band to match the yellow arrows region */
+/* Keep Now Playing overlay positioned against the full image */
 .nowplaying{
-  top: var(--queue-top) !important;
-  height: var(--queue-h) !important;
+  top: 0 !important;
+  height: 100% !important;
 }
 
 /* Position arrow hotspots directly (not relative to the band) */
@@ -650,7 +650,7 @@ body.debug-hotspots #dial::before{
 .nowplaying-window {
   position: absolute;
   left: var(--np-left);
-  top: calc(var(--np-top) - var(--queue-top));
+  top: var(--np-top);
   width: var(--np-w);
   height: var(--np-h);
   display: flex;

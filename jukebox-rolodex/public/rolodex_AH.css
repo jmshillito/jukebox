@@ -474,14 +474,10 @@ body{
 @media (max-width: 600px){
   :root{
     /* Mobile-only alignment */
-    --keypad-top: 62.5%;
-    --np-top: 90.5%;
-    --pn-top: 86.5%;
+    --keypad-top: 61.0%;
+    --np-top: 88.5%;
+    --pn-top: 92.0%;
   }
-
-  /* Mobile nudges */
-  .keypad{ top: calc(var(--keypad-top) - 6px) !important; }
-  .nowplaying-window{ top: calc(var(--np-top) - 20px) !important; }
 }
 
 /* Apply variables */

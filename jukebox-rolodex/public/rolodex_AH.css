@@ -766,6 +766,7 @@ body.debug-hotspots #dial::before{
   position: relative;
   --flash-x: 0px; /* + right, - left */
   --flash-y: 0px; /* + down, - up */
+  --flash-y-offset: 0px; /* mobile-only global nudge */
   --flash-inset: 18% 16%; /* overlay size inside hotspot (top/bottom, left/right) */
 }
 
@@ -778,8 +779,12 @@ body.debug-hotspots #dial::before{
   background: rgba(255,255,255,0.9);
   pointer-events: none;
 
-  transform: translate(var(--flash-x), var(--flash-y));
+  transform: translate(var(--flash-x), calc(var(--flash-y) + var(--flash-y-offset)));
   transition: transform 120ms ease, opacity 120ms ease;
+}
+
+@media (max-width: 600px){
+  .key{ --flash-y-offset: 8px; }
 }
 
 /* -----------------------------

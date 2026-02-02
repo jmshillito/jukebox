@@ -471,6 +471,15 @@ body{
   --transport-next-w: 10.6%;
 }
 
+@media (max-width: 600px){
+  :root{
+    /* Mobile-only alignment */
+    --keypad-top: 62.5%;
+    --np-top: 90.5%;
+    --pn-top: 86.5%;
+  }
+}
+
 /* Apply variables */
 #pageLeft{  top: var(--pageLeft-top) !important; left: var(--pageLeft-left) !important; width: var(--pageLeft-w) !important; height: var(--pageLeft-h) !important; }
 #pageRight{ top: var(--pageRight-top) !important; left: var(--pageRight-left) !important; width: var(--pageRight-w) !important; height: var(--pageRight-h) !important; }

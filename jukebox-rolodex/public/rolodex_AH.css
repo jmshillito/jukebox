@@ -478,6 +478,10 @@ body{
     --np-top: 90.5%;
     --pn-top: 86.5%;
   }
+
+  /* Mobile nudges */
+  .keypad{ top: calc(var(--keypad-top) - 6px) !important; }
+  .nowplaying-window{ top: calc(var(--np-top) - 20px) !important; }
 }
 
 /* Apply variables */

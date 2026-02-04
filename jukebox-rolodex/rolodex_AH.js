@@ -636,18 +636,20 @@ addPressListener(front, onCardPress);
 addPressListener(transportPrev, async () => {
   playClickSound();
   if (queue.length === 0) return;
-  if (queueCursor > 0){
-    queueCursor -= 1;
-    browseCursor = queueCursor;
-    await playSlot(queue[queueCursor].code, true);
-  } else if (audioPlayer) {
-    audioPlayer.pause();
-    try { audioPlayer.currentTime = 0; } catch(_) {}
-  }
+  // Skip to last song in queue
+  queueCursor = queue.length - 1;
+  browseCursor = queueCursor;
+  await playSlot(queue[queueCursor].code, true);
 });
 addPressListener(transportPause, () => {
   playClickSound();
-  audioPlayer?.pause();
+  // Skip to next song in queue
+  if (queue.length === 0) return;
+  if (queueCursor < queue.length - 1){
+    queueCursor += 1;
+    browseCursor = queueCursor;
+    playSlot(queue[queueCursor].code, true).catch(()=>{});
+  }
 });
 addPressListener(transportPlay, async () => {
   playClickSound();
@@ -668,15 +670,8 @@ addPressListener(transportStop, () => {
 });
 addPressListener(transportNext, async () => {
   playClickSound();
-  if (queue.length === 0) return;
-  if (queueCursor < queue.length - 1){
-    queueCursor += 1;
-    browseCursor = queueCursor;
-    await playSlot(queue[queueCursor].code, true);
-  } else if (audioPlayer) {
-    audioPlayer.pause();
-    try { audioPlayer.currentTime = 0; } catch(_) {}
-  }
+  // Pause (rightmost button)
+  audioPlayer?.pause();
 });
 
 

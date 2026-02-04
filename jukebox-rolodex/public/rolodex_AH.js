@@ -590,7 +590,7 @@ const onLetterPress = (e) => {
   playClickSound();
   flashDim(btn);
   selectedLetter = btn.dataset.letter;
-  if (queueCursor < 0){
+  if (queue.length === 0 && queueCursor < 0){
     setNowPlayingText(selectedLetter);
   }
 };
@@ -606,7 +606,7 @@ const onNumberPress = async (e) => {
   // Update UI immediately even if no file is assigned yet
   const rec = await dbGet(code);
   const title = resolveSlotTitle(code, rec);
-  if (queueCursor < 0){
+  if (queue.length === 0 && queueCursor < 0){
     setNowPlayingText(title);
   } else {
     setPlayingNextText(title);

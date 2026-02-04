@@ -495,7 +495,7 @@ body{
 
 @media (min-width: 601px){
   :root{
-    --keypad-top: 46%;
+    --keypad-top: 41%;
     --keypad-left: 11%;
     --keypad-w: 76%;
   }

@@ -253,7 +253,13 @@ body{
     --overlay-shift-y: 18px;  /* move DOWN */
   }
   .rolodex{
-    transform: translateY(-6px);
+    transform: translateY(-8px);
+  }
+  .cols{
+    gap: 6px;
+  }
+  .col{
+    gap: 6px;
   }
 }
 

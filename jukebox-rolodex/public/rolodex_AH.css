@@ -212,7 +212,6 @@ body{
   touch-action: manipulation;
 }
 
-
 /* ------------------------------------------------------------
    Stage (centered, unaffected by modal)
 ------------------------------------------------------------ */
@@ -472,15 +471,6 @@ body{
   --transport-next-w: 10.6%;
 }
 
-@media (max-width: 600px){
-  :root{
-    /* Mobile-only alignment */
-    --keypad-top: 61.0%;
-    --np-top: 88.5%;
-    --pn-top: 92.0%;
-  }
-}
-
 /* Apply variables */
 #pageLeft{  top: var(--pageLeft-top) !important; left: var(--pageLeft-left) !important; width: var(--pageLeft-w) !important; height: var(--pageLeft-h) !important; }
 #pageRight{ top: var(--pageRight-top) !important; left: var(--pageRight-left) !important; width: var(--pageRight-w) !important; height: var(--pageRight-h) !important; }
@@ -563,10 +553,10 @@ body.debug-hotspots #dial::before{
   --next-h: 13.3%;
 }
 
-/* Keep Now Playing overlay positioned against the full image */
+/* Move the band to match the yellow arrows region */
 .nowplaying{
-  top: 0 !important;
-  height: 100% !important;
+  top: var(--queue-top) !important;
+  height: var(--queue-h) !important;
 }
 
 /* Position arrow hotspots directly (not relative to the band) */
@@ -660,7 +650,7 @@ body.debug-hotspots #dial::before{
 .nowplaying-window {
   position: absolute;
   left: var(--np-left);
-  top: var(--np-top);
+  top: calc(var(--np-top) - var(--queue-top));
   width: var(--np-w);
   height: var(--np-h);
   display: flex;
@@ -776,7 +766,6 @@ body.debug-hotspots #dial::before{
   position: relative;
   --flash-x: 0px; /* + right, - left */
   --flash-y: 0px; /* + down, - up */
-  --flash-y-offset: 0px; /* mobile-only global nudge */
   --flash-inset: 18% 16%; /* overlay size inside hotspot (top/bottom, left/right) */
 }
 
@@ -789,12 +778,8 @@ body.debug-hotspots #dial::before{
   background: rgba(255,255,255,0.9);
   pointer-events: none;
 
-  transform: translate(var(--flash-x), calc(var(--flash-y) + var(--flash-y-offset)));
+  transform: translate(var(--flash-x), var(--flash-y));
   transition: transform 120ms ease, opacity 120ms ease;
-}
-
-@media (max-width: 600px){
-  .key{ --flash-y-offset: 8px; }
 }
 
 /* -----------------------------

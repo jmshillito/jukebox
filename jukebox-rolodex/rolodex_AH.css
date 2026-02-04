@@ -396,7 +396,7 @@ body{
 }
 .keys + .keys{ margin-top: 2.2%; }
 .key{
-  height: clamp(34px, 6.2vw, 54px);
+  height: clamp(32px, 6.0vw, 52px);
   border-radius: 10px;
   border: 0;
   background: transparent;
@@ -450,7 +450,7 @@ body{
   --dial-h: 7.5%;
 
   /* Keypad block (whole keypad) */
-  --keypad-top: 56.5%;
+  --keypad-top: 50%;
   --keypad-left: 10%;
   --keypad-w: 78%;
 

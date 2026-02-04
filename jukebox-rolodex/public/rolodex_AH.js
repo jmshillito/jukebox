@@ -923,6 +923,11 @@ clearAllBtn?.addEventListener("click", async () => {
   bindPaging();
   await initClerkAuth();
 
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("debug") || params.get("debug") === "1" || params.has("hotspots")) {
+    document.body.classList.add("debug-hotspots");
+  }
+
   // Toggle hotspot outlines for alignment: press "d"
   window.addEventListener("keydown", (e) => {
     if (e.key.toLowerCase() === "d") document.body.classList.toggle("debug-hotspots");

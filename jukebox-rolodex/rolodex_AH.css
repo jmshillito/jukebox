@@ -531,7 +531,10 @@ body.debug-hotspots .transport-btn,
 body.debug-hotspots .playing-next-window,
 body.debug-hotspots .rolodex-banner{
   outline: 3px solid rgba(0,255,255,.85);
-  background: rgba(0,255,255,.10);
+  background: rgba(0,255,255,.06);
+}
+body.debug-hotspots .transport-btn{
+  background: transparent;
 }
 
 /* Optional: show labels for arrow hotspots in debug */

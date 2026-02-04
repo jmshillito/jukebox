@@ -679,11 +679,6 @@ addPressListener(transportNext, async () => {
 
 async function queueSong(code){
   const rec = await dbGet(code);
-  if (!rec || !rec.blob){
-    console.warn("No file assigned for", code);
-    return;
-  }
-
   const title = rec.title || titleFromFilename(rec.fileName || code);
 
   // Add to queue
@@ -694,7 +689,9 @@ async function queueSong(code){
     queueCursor = 0;
     browseCursor = queueCursor;
     setNowPlayingText(title);
-    await playSlot(queue[queueCursor].code, /*userInitiated*/ true);
+    if (rec && rec.blob){
+      await playSlot(queue[queueCursor].code, /*userInitiated*/ true);
+    }
     updatePlayingNext();
     return;
   }

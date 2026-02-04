@@ -601,11 +601,14 @@ const onNumberPress = async (e) => {
   flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
 
-  // Show slot code immediately for alignment feedback
-  setNowPlayingText(code);
   const rec = await dbGet(code);
   const title = resolveSlotTitle(code, rec);
-  setNowPlayingText(title);
+  const firstSelection = queue.length === 0 && queueCursor < 0;
+  if (firstSelection){
+    setNowPlayingText(title);
+  } else {
+    setPlayingNextText(title);
+  }
   await queueSong(code);
 };
 

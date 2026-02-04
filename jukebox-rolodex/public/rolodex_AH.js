@@ -759,10 +759,16 @@ async function playSlot(code, userInitiated = false){
 
 /* Loader modal */
 function openLoader(){ loaderModal.classList.remove("hidden"); }
-function requireSignedIn(){
+async function requireSignedIn(){
+  if (!window.Clerk) return false;
+  try { await window.Clerk.load(); } catch(_) {}
   if (window.Clerk?.user) return true;
   if (typeof window.Clerk?.openSignIn === "function"){
-    window.Clerk.openSignIn({ redirectUrl: window.location.href });
+    try{
+      window.Clerk.openSignIn({ redirectUrl: window.location.href });
+    }catch(_){
+      if (clerkSignIn) clerkSignIn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   } else if (clerkSignIn) {
     clerkSignIn.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -770,8 +776,8 @@ function requireSignedIn(){
 }
 function closeLoaderUI(){ loaderModal.classList.add("hidden"); }
 
-hamburger?.addEventListener("click", () => {
-  if (!requireSignedIn()) return;
+hamburger?.addEventListener("click", async () => {
+  if (!await requireSignedIn()) return;
   openLoader();
 });
 closeLoader?.addEventListener("click", closeLoaderUI);

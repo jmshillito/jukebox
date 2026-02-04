@@ -339,6 +339,7 @@ body{
 
 .song-card{
   width: 100%;
+  margin: 0;
   background: var(--card);
   border: 3px solid var(--cardBorder);
   border-radius: 10px;
@@ -349,6 +350,12 @@ body{
   align-items: baseline;
   max-height: 120px;
   flex: 1;
+}
+@media (max-width: 600px){
+  .song-card{
+    width: 92%;
+    margin: 0 auto;
+  }
 }
 .song-code{
   background: #d54848;

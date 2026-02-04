@@ -492,6 +492,14 @@ body{
   --transport-next-w: 10.6%;
 }
 
+@media (min-width: 601px){
+  :root{
+    --keypad-top: 55.2%;
+    --keypad-left: 11%;
+    --keypad-w: 76%;
+  }
+}
+
 /* Apply variables */
 #pageLeft{  top: var(--pageLeft-top) !important; left: var(--pageLeft-left) !important; width: var(--pageLeft-w) !important; height: var(--pageLeft-h) !important; }
 #pageRight{ top: var(--pageRight-top) !important; left: var(--pageRight-left) !important; width: var(--pageRight-w) !important; height: var(--pageRight-h) !important; }
@@ -769,29 +777,6 @@ body.debug-hotspots #dial::before{
   background: transparent;
   cursor: pointer;
   pointer-events: auto;
-}
-#transportPlay{
-  position: absolute;
-}
-#transportPlay::before{
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #f8db59 0%, #f1c21c 60%, #e1a800 100%);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25), 0 2px 4px rgba(0,0,0,.35);
-}
-#transportPlay::after{
-  content: "";
-  position: absolute;
-  left: 42%;
-  top: 26%;
-  width: 0;
-  height: 0;
-  border-top: 12px solid transparent;
-  border-bottom: 12px solid transparent;
-  border-left: 18px solid #101010;
-  filter: drop-shadow(0 1px 0 rgba(255,255,255,.25));
 }
 #transportPrev{ left: var(--transport-prev-left); width: var(--transport-prev-w); }
 #transportPause{ left: var(--transport-pause-left); width: var(--transport-pause-w); }

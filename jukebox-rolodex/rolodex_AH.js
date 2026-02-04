@@ -590,7 +590,11 @@ const onLetterPress = (e) => {
   playClickSound();
   flashDim(btn);
   selectedLetter = btn.dataset.letter;
-  setNowPlayingText(selectedLetter);
+  if (queueCursor < 0){
+    setNowPlayingText(selectedLetter);
+  } else {
+    setPlayingNextText(selectedLetter);
+  }
 };
 
 const onNumberPress = async (e) => {
@@ -601,14 +605,6 @@ const onNumberPress = async (e) => {
   flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
 
-  const rec = await dbGet(code);
-  const title = resolveSlotTitle(code, rec);
-  const firstSelection = queue.length === 0 && queueCursor < 0;
-  if (firstSelection){
-    setNowPlayingText(title);
-  } else {
-    setPlayingNextText(title);
-  }
   await queueSong(code);
 };
 

@@ -759,9 +759,21 @@ async function playSlot(code, userInitiated = false){
 
 /* Loader modal */
 function openLoader(){ loaderModal.classList.remove("hidden"); }
+function requireSignedIn(){
+  if (window.Clerk?.user) return true;
+  if (typeof window.Clerk?.openSignIn === "function"){
+    window.Clerk.openSignIn({ redirectUrl: window.location.href });
+  } else if (clerkSignIn) {
+    clerkSignIn.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  return false;
+}
 function closeLoaderUI(){ loaderModal.classList.add("hidden"); }
 
-hamburger?.addEventListener("click", openLoader);
+hamburger?.addEventListener("click", () => {
+  if (!requireSignedIn()) return;
+  openLoader();
+});
 closeLoader?.addEventListener("click", closeLoaderUI);
 loaderModal?.addEventListener("click", (e) => { if (e.target === loaderModal) closeLoaderUI(); });
 

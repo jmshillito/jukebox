@@ -288,7 +288,7 @@ body{
   height: 38.0%;
   perspective: 1000px;
   z-index: 50;
-  transform: translateY(-2px);
+  transform: translateY(-4px);
 }
 .card-stack{
   position: relative;

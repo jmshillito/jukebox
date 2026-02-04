@@ -384,6 +384,9 @@ let selectedLetter = null;
 let queue = [];
 let queueCursor = -1;
 let hasSelection = false;     // tracks first A1..H8 selection even if no file is assigned
+// Expose for quick debugging in DevTools
+window.queue = queue;
+window.queueCursor = () => queueCursor;
 
 let browseCursor = -1;         // cursor for previewing queue (prev/next)
 let _nowPlayingTitle = "—";    // last confirmed playing title

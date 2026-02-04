@@ -792,7 +792,8 @@ body.debug-hotspots #dial::before{
 }
 
 /* The actual white overlay */
-.key.btn-dim-flash::after{
+.key.btn-dim-flash::after,
+body.debug-hotspots .key::after{
   content: "";
   position: absolute;
   inset: var(--flash-inset);

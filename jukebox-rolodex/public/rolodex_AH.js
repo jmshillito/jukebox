@@ -605,6 +605,15 @@ const onNumberPress = async (e) => {
   flashDim(btn);
   const code = `${selectedLetter}${btn.dataset.number}`;
 
+  // Update UI immediately even if no file is assigned yet
+  const rec = await dbGet(code);
+  const title = resolveSlotTitle(code, rec);
+  if (queueCursor < 0){
+    setNowPlayingText(title);
+  } else {
+    setPlayingNextText(title);
+  }
+
   await queueSong(code);
 };
 

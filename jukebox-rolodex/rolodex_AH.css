@@ -253,7 +253,7 @@ body{
     --overlay-shift-y: 18px;  /* move DOWN */
   }
   .rolodex{
-    transform: translateY(-4px);
+    transform: translateY(-6px);
   }
 }
 
@@ -354,8 +354,8 @@ body{
 
 @media (max-width: 600px){
   .song-card{
-    width: 92%;
-    margin: 0 auto;
+    width: 108%;
+    margin: 0 -4%;
   }
 }
 .song-code{

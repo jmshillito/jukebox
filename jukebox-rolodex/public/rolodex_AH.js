@@ -592,8 +592,6 @@ const onLetterPress = (e) => {
   selectedLetter = btn.dataset.letter;
   if (queueCursor < 0){
     setNowPlayingText(selectedLetter);
-  } else {
-    setPlayingNextText(selectedLetter);
   }
 };
 

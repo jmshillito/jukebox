@@ -10,6 +10,7 @@ module.exports = async (req, res) => {
     const title = body.title;
     const artist = body.artist || null;
     const r2Key = body.r2_key || body.r2Key;
+    const slot = body.slot || null;
     const id = body.id || null;
 
     if (!title || !r2Key) {
@@ -19,7 +20,7 @@ module.exports = async (req, res) => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from("songs")
-      .insert({ id, owner_id: userId, title, artist, r2_key: r2Key })
+      .insert({ id, owner_id: userId, title, artist, r2_key: r2Key, slot })
       .select("id, owner_id, title, artist, r2_key, created_at")
       .single();
 

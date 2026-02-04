@@ -173,7 +173,7 @@ function createSongId(){
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function uploadSongToCloud(file, title){
+async function uploadSongToCloud(file, title, slot){
   setCloudStatus("Uploading to cloud...", "ok");
   const contentType = file.type || "audio/mpeg";
   const songId = createSongId();
@@ -199,7 +199,7 @@ async function uploadSongToCloud(file, title){
   const metaRes = await authFetch("/api/songs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: songId, title, r2_key: key }),
+    body: JSON.stringify({ id: songId, title, r2_key: key, slot }),
   });
   if (!metaRes.ok) {
     const payload = await readJsonSafe(metaRes);
@@ -837,7 +837,7 @@ function makeSlotRow(slot){
     renderCurrent();
 
     try{
-      const cloud = await uploadSongToCloud(file, title);
+      const cloud = await uploadSongToCloud(file, title, slot);
       const rec = await dbGet(slot);
       if (rec){
         rec.song_id = cloud.songId;

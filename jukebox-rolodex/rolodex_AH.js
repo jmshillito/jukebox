@@ -682,7 +682,7 @@ addPressListener(transportNext, async () => {
 
 async function queueSong(code){
   const rec = await dbGet(code);
-  const title = rec.title || titleFromFilename(rec.fileName || code);
+  const title = rec?.title || titleFromFilename(rec?.fileName || code);
 
   // Add to queue
   queue.push({ code, title });
@@ -692,7 +692,7 @@ async function queueSong(code){
     queueCursor = 0;
     browseCursor = queueCursor;
     setNowPlayingText(title);
-    if (rec && rec.blob){
+    if (rec?.blob){
       await playSlot(queue[queueCursor].code, /*userInitiated*/ true);
     }
     updatePlayingNext();

@@ -499,8 +499,12 @@ body{
     --keypad-left: 13.5%;
     --keypad-w: 71%;
   }
-  /* Nudge A and B only (1st two buttons in each row) */
-  .keys .key:nth-child(-n+2){
+  /* Nudge A only (1st button in each row) */
+  .keys .key:nth-child(1){
+    transform: translateX(4px);
+  }
+  /* Keep B at +2px */
+  .keys .key:nth-child(2){
     transform: translateX(2px);
   }
 }

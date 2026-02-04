@@ -261,6 +261,9 @@ body{
   .col{
     gap: 6px;
   }
+  .cols > .col:last-child{
+    transform: translateX(4px);
+  }
 }
 
 .overlay{

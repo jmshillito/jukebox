@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
     const { data, error } = await supabase
       .from("songs")
       .insert({ id, owner_id: userId, title, artist, r2_key: r2Key, slot })
-      .select("id, owner_id, title, artist, r2_key, created_at")
+      .select("id, owner_id, title, artist, r2_key, slot, created_at")
       .single();
 
     if (error) return sendJson(res, 500, { error: "Database insert failed" });

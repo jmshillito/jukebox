@@ -252,6 +252,9 @@ body{
     --overlay-shift-x: -14px; /* move LEFT */
     --overlay-shift-y: 18px;  /* move DOWN */
   }
+  .rolodex{
+    transform: translateY(-4px);
+  }
 }
 
 .overlay{

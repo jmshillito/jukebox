@@ -383,6 +383,7 @@ let isAnimating = false;
 let selectedLetter = null;
 let queue = [];
 let queueCursor = -1;
+let hasSelection = false;     // tracks first A1..H8 selection even if no file is assigned
 
 let browseCursor = -1;         // cursor for previewing queue (prev/next)
 let _nowPlayingTitle = "—";    // last confirmed playing title
@@ -393,6 +394,7 @@ function setNowPlayingConfirmed(title){
   setNowPlayingText(_nowPlayingTitle);
   const el = document.getElementById("nowPlayingOverlayText");
   if (el) el.classList.remove("preview");
+  if (_nowPlayingTitle === "—") hasSelection = false;
 }
 
 function setPlayingNextText(text){
@@ -590,7 +592,7 @@ const onLetterPress = (e) => {
   playClickSound();
   flashDim(btn);
   selectedLetter = btn.dataset.letter;
-  if (queue.length === 0 && queueCursor < 0){
+  if (!hasSelection && queue.length === 0 && queueCursor < 0){
     setNowPlayingText(selectedLetter);
   }
 };
@@ -606,11 +608,12 @@ const onNumberPress = async (e) => {
   // Update UI immediately even if no file is assigned yet
   const rec = await dbGet(code);
   const title = resolveSlotTitle(code, rec);
-  if (queue.length === 0 && queueCursor < 0){
+  if (!hasSelection && queue.length === 0 && queueCursor < 0){
     setNowPlayingText(title);
   } else {
     setPlayingNextText(title);
   }
+  hasSelection = true;
 
   await queueSong(code);
 };

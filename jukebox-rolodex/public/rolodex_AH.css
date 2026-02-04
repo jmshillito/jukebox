@@ -364,6 +364,8 @@ body{
   .song-card{
     width: 108%;
     margin: 0 -4%;
+    transform: scaleY(0.95);
+    transform-origin: center;
   }
 }
 .song-code{

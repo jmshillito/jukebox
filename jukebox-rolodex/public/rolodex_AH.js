@@ -683,8 +683,8 @@ async function queueSong(code){
   // Add to queue
   queue.push({ code, title });
 
-  // Start immediately on the first selection
-  if (!isAudioPlaying() && queueCursor < 0){
+  // Start immediately on the first selection only
+  if (queueCursor < 0){
     queueCursor = 0;
     browseCursor = queueCursor;
     setNowPlayingText(title);
@@ -693,7 +693,7 @@ async function queueSong(code){
     return;
   }
 
-  // If something is already playing, just queue it up.
+  // If something is already selected/queued, just queue it up.
   if (queueCursor < 0) queueCursor = 0;
   browseCursor = queueCursor;
     browseCursor = queueCursor;

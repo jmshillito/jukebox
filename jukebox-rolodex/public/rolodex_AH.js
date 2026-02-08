@@ -93,6 +93,7 @@ const loaderModal = document.getElementById("loaderModal");
 const closeLoader = document.getElementById("closeLoader");
 const slotRows = document.getElementById("slotRows");
 const autoFillByName = document.getElementById("autoFillByName");
+const bulkUploadBtn = document.getElementById("bulkUpload");
 const clearAllBtn = document.getElementById("clearAll");
 
 const audioPlayer = document.getElementById("audioPlayer");
@@ -379,6 +380,32 @@ const transportNext = document.getElementById("transportNext");
 const letters = ["A","B","C","D","E","F","G","H"];
 let pageIndex = 0;
 let isAnimating = false;
+
+function allSlots(){
+  const slots = [];
+  for (const L of letters){
+    for (let i = 1; i <= 8; i++){
+      slots.push(`${L}${i}`);
+    }
+  }
+  return slots;
+}
+
+function shuffleArray(arr){
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function sortFilesByPath(files){
+  return files.slice().sort((a, b) => {
+    const ap = a.webkitRelativePath || a.name || "";
+    const bp = b.webkitRelativePath || b.name || "";
+    return ap.localeCompare(bp, undefined, { numeric: true, sensitivity: "base" });
+  });
+}
 
 let selectedLetter = null;
 let queue = [];
@@ -926,6 +953,71 @@ autoFillByName?.addEventListener("click", async () => {
     await refreshPagesFromDB();
     renderCurrent();
     await populateLoader();
+  });
+
+  picker.click();
+});
+
+bulkUploadBtn?.addEventListener("click", async () => {
+  if (!await requireSignedIn()) return;
+
+  const picker = document.createElement("input");
+  picker.type = "file";
+  picker.accept = "audio/mpeg,audio/mp3";
+  picker.multiple = true;
+  picker.webkitdirectory = true;
+  picker.directory = true;
+
+  picker.addEventListener("change", async () => {
+    let files = Array.from(picker.files || []);
+    if (files.length === 0) return;
+
+    const ordered = window.confirm(
+      "Allocate in folder order? OK = ordered by folder/name, Cancel = random allocation."
+    );
+
+    files = ordered ? sortFilesByPath(files) : shuffleArray(files);
+
+    const slots = allSlots();
+    let uploaded = 0;
+    const total = Math.min(files.length, slots.length);
+
+    for (let i = 0; i < total; i++){
+      const file = files[i];
+      const slot = slots[i];
+      const title = titleFromFilename(file.name);
+
+      await dbPut({
+        slot,
+        fileName: file.name,
+        title,
+        mime: file.type || "audio/mpeg",
+        blob: file,
+      });
+
+      await refreshPagesFromDB();
+      renderCurrent();
+
+      try{
+        setCloudStatus(`Uploading ${i + 1}/${total}...`, "ok");
+        const cloud = await uploadSongToCloud(file, title, slot);
+        const rec = await dbGet(slot);
+        if (rec){
+          rec.song_id = cloud.songId;
+          rec.r2_key = cloud.r2Key;
+          await dbPut(rec);
+        }
+        uploaded += 1;
+      }catch(err){
+        console.warn("Bulk upload failed", err);
+        setCloudStatus(err?.message || "Bulk upload failed", "error");
+      }
+    }
+
+    await refreshPagesFromDB();
+    renderCurrent();
+    await populateLoader();
+    setCloudStatus(`Uploaded ${uploaded}/${total}`, uploaded === total ? "ok" : "error");
   });
 
   picker.click();

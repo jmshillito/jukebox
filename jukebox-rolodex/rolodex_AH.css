@@ -819,6 +819,32 @@ body.debug-hotspots #dial::before{
 }
 .playing-next-window .pn-left{ left: 0; }
 .playing-next-window .pn-right{ right: 0; }
+
+/* Mobile queue hit zones */
+.mobile-queue-zones{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6.5%;
+  height: 10%;
+  z-index: 9100;
+  pointer-events: none;
+}
+.mobile-queue-zone{
+  position: absolute;
+  top: 0;
+  width: 38%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+}
+.mobile-queue-zone.left{ left: 0; }
+.mobile-queue-zone.right{ right: 0; }
+
+@media (min-width: 601px){
+  .mobile-queue-zones{ display: none; }
+}
 .playing-next-text{
   color: #ffffff;
   font-size: 20px;

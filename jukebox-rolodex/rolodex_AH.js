@@ -472,6 +472,8 @@ const prevQueue = document.getElementById("prevQueue");
 const nextQueue = document.getElementById("nextQueue");
 const prevQueuePn = document.getElementById("prevQueuePn");
 const nextQueuePn = document.getElementById("nextQueuePn");
+const prevQueueMobile = document.getElementById("prevQueueMobile");
+const nextQueueMobile = document.getElementById("nextQueueMobile");
 const playingNextText = document.getElementById("playingNextText");
 const transportPrev = document.getElementById("transportPrev");
 const transportPause = document.getElementById("transportPause");
@@ -909,6 +911,8 @@ prevQueue?.addEventListener("click", stepPrevQueue);
 nextQueue?.addEventListener("click", stepNextQueue);
 prevQueuePn?.addEventListener("click", stepPrevQueue);
 nextQueuePn?.addEventListener("click", stepNextQueue);
+addPressListener(prevQueueMobile, () => { playClickSound(); stepPrevQueue(); });
+addPressListener(nextQueueMobile, () => { playClickSound(); stepNextQueue(); });
 
 
 async function playSlot(code, userInitiated = false){

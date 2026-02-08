@@ -130,11 +130,11 @@ async function autoSignInAndLoadLibrary(){
     await syncCloudLibraryToLocal();
   };
 
-  if (!window.Clerk?.user && typeof window.Clerk?.openSignIn === "function"){
+  if (!window.Clerk?.user && typeof window.Clerk?.redirectToSignIn === "function"){
     try{
-      window.Clerk.openSignIn({ redirectUrl: window.location.href });
+      window.Clerk.redirectToSignIn({ redirectUrl: window.location.href });
     }catch(_){
-      // If the modal can't open, user can use the mounted Sign In UI.
+      // If redirect fails, user can use the mounted Sign In UI.
     }
   }
 

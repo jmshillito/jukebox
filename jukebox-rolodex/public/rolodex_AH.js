@@ -369,6 +369,8 @@ const numbersWrap = document.getElementById("numbers");
 
 const prevQueue = document.getElementById("prevQueue");
 const nextQueue = document.getElementById("nextQueue");
+const prevQueuePn = document.getElementById("prevQueuePn");
+const nextQueuePn = document.getElementById("nextQueuePn");
 const playingNextText = document.getElementById("playingNextText");
 const transportPrev = document.getElementById("transportPrev");
 const transportPause = document.getElementById("transportPause");
@@ -764,7 +766,7 @@ async function queueSong(code){
 
 
 
-prevQueue?.addEventListener("click", () => {
+const stepPrevQueue = () => {
   if (queue.length === 0 || queueCursor < 0) return;
   const minIndex = queueCursor + 1;
   if (minIndex >= queue.length){
@@ -775,8 +777,8 @@ prevQueue?.addEventListener("click", () => {
   if (browseCursor < minIndex) browseCursor = minIndex;
   browseCursor = Math.max(minIndex, browseCursor - 1);
   setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
-});
-nextQueue?.addEventListener("click", () => {
+};
+const stepNextQueue = () => {
   if (queue.length === 0 || queueCursor < 0) return;
   const minIndex = queueCursor + 1;
   if (minIndex >= queue.length){
@@ -787,7 +789,12 @@ nextQueue?.addEventListener("click", () => {
   if (browseCursor < minIndex) browseCursor = minIndex;
   browseCursor = Math.min(queue.length - 1, browseCursor + 1);
   setPlayingNextText(queue[browseCursor]?.title || queue[browseCursor]?.code || "—");
-});
+};
+
+prevQueue?.addEventListener("click", stepPrevQueue);
+nextQueue?.addEventListener("click", stepNextQueue);
+prevQueuePn?.addEventListener("click", stepPrevQueue);
+nextQueuePn?.addEventListener("click", stepNextQueue);
 
 
 async function playSlot(code, userInitiated = false){

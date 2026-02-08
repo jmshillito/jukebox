@@ -780,6 +780,17 @@ body.debug-hotspots #dial::before{
   z-index: 8500;
   overflow: hidden;
 }
+.playing-next-window .pn-btn{
+  position: absolute;
+  top: 10%;
+  width: 18%;
+  height: 80%;
+  pointer-events: auto;
+  background: transparent;
+  border: 0;
+}
+.playing-next-window .pn-left{ left: 0; }
+.playing-next-window .pn-right{ right: 0; }
 .playing-next-text{
   color: #ffffff;
   font-size: 20px;

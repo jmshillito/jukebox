@@ -251,8 +251,8 @@ body{
 @media (max-width: 600px){
   :root{
     /* ↓ tune these two values only */
-    --overlay-shift-x: -14px; /* move LEFT */
-    --overlay-shift-y: 18px;  /* move DOWN */
+    --overlay-shift-x: -15px; /* move LEFT */
+    --overlay-shift-y: 13px;  /* move DOWN */
   }
   .rolodex{
     transform: translateY(-8px);

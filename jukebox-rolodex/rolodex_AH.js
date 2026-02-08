@@ -361,8 +361,7 @@ function setNowPlayingText(text){
   const value = (text && String(text).trim()) ? String(text) : "—";
 
   if (direct){
-    direct.textContent = value;
-    applyTextMarquee(direct);
+    setTextWithMarquee(direct, value);
     return;
   }
 
@@ -532,16 +531,24 @@ function setNowPlayingConfirmed(title){
 function setPlayingNextText(text){
   if (!playingNextText) return;
   const value = (text && String(text).trim()) ? String(text) : "—";
-  playingNextText.textContent = value;
-  applyTextMarquee(playingNextText);
+  setTextWithMarquee(playingNextText, value);
 }
 
-function applyTextMarquee(el){
+function setTextWithMarquee(el, text){
   if (!el) return;
-  el.classList.remove("marquee-text");
-  if (el.scrollWidth > el.clientWidth + 4){
-    el.classList.add("marquee-text");
+  let span = el.querySelector(".marquee-span");
+  if (!span){
+    span = document.createElement("span");
+    span.className = "marquee-span";
+    el.replaceChildren(span);
   }
+  span.textContent = text;
+  span.classList.remove("marquee-text");
+  requestAnimationFrame(() => {
+    if (span.scrollWidth > el.clientWidth + 4){
+      span.classList.add("marquee-text");
+    }
+  });
 }
 
 function updatePlayingNext(){

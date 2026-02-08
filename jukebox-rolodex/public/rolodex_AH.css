@@ -256,6 +256,9 @@ body{
     --keypad-top: 55.6%;
     --keypad-left: 9.7%;
   }
+  .keypad{
+    transform: translate(-1px, -5px);
+  }
   .rolodex{
     transform: translateY(-8px);
   }

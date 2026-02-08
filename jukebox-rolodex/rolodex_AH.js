@@ -127,14 +127,14 @@ async function autoSignInAndLoadLibrary(){
   const trySync = async () => {
     if (!window.Clerk?.user || synced) return;
     synced = true;
+    document.body.classList.remove("auth-required");
     await syncCloudLibraryToLocal();
   };
 
-  if (!window.Clerk?.user && typeof window.Clerk?.redirectToSignIn === "function"){
-    try{
-      window.Clerk.redirectToSignIn({ redirectUrl: window.location.href });
-    }catch(_){
-      // If redirect fails, user can use the mounted Sign In UI.
+  if (!window.Clerk?.user){
+    document.body.classList.add("auth-required");
+    if (clerkSignIn) {
+      clerkSignIn.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }
 

@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from("songs")
-      .select("id, title, artist, r2_key, created_at")
+      .select("id, title, artist, r2_key, slot, created_at")
       .eq("owner_id", userId)
       .order("created_at", { ascending: false });
 

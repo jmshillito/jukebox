@@ -119,6 +119,32 @@ async function initClerkAuth(){
   if (typeof window.Clerk.addListener === "function") window.Clerk.addListener(render);
 }
 
+async function autoSignInAndLoadLibrary(){
+  if (!window.Clerk) return;
+  try { await window.Clerk.load(); } catch(_) {}
+
+  let synced = false;
+  const trySync = async () => {
+    if (!window.Clerk?.user || synced) return;
+    synced = true;
+    await syncCloudLibraryToLocal();
+  };
+
+  if (!window.Clerk?.user && typeof window.Clerk?.openSignIn === "function"){
+    try{
+      window.Clerk.openSignIn({ redirectUrl: window.location.href });
+    }catch(_){
+      // If the modal can't open, user can use the mounted Sign In UI.
+    }
+  }
+
+  await trySync();
+
+  if (typeof window.Clerk.addListener === "function"){
+    window.Clerk.addListener(() => { trySync().catch(()=>{}); });
+  }
+}
+
 async function getSessionToken(){
   if (!window.Clerk?.session) return null;
   return window.Clerk.session.getToken();
@@ -207,6 +233,51 @@ async function uploadSongToCloud(file, title, slot){
   }
 
   return { songId, r2Key: key };
+}
+
+async function fetchCloudLibrary(){
+  const res = await authFetch("/api/library");
+  if (!res.ok){
+    const payload = await readJsonSafe(res);
+    throw new Error(payload?.error || `Library fetch failed (${res.status})`);
+  }
+  const payload = await readJsonSafe(res);
+  return Array.isArray(payload?.songs) ? payload.songs : [];
+}
+
+async function syncCloudLibraryToLocal(){
+  try{
+    const songs = await fetchCloudLibrary();
+    if (songs.length === 0) return;
+
+    const existing = await dbGetAll();
+    const map = new Map(existing.map(r => [r.slot, r]));
+    const available = allSlots().filter(s => !map.has(s));
+
+    for (const song of songs){
+      let slot = song.slot || null;
+      if (!slot) slot = available.shift() || null;
+      if (!slot) break;
+
+      const rec = {
+        slot,
+        title: song.title || slot,
+        song_id: song.id || null,
+        r2_key: song.r2_key || null,
+        source: "cloud",
+      };
+      await dbPut(rec);
+      map.set(slot, rec);
+    }
+
+    await refreshPagesFromDB();
+    renderCurrent();
+    await populateLoader();
+    setCloudStatus("Loaded from cloud", "ok");
+  }catch(err){
+    console.warn("Cloud library sync failed", err);
+    setCloudStatus(err?.message || "Cloud library sync failed", "error");
+  }
 }
 
 
@@ -379,6 +450,16 @@ const transportNext = document.getElementById("transportNext");
 const letters = ["A","B","C","D","E","F","G","H"];
 let pageIndex = 0;
 let isAnimating = false;
+
+function allSlots(){
+  const slots = [];
+  for (const L of letters){
+    for (let i = 1; i <= 8; i++){
+      slots.push(`${L}${i}`);
+    }
+  }
+  return slots;
+}
 
 let selectedLetter = null;
 let queue = [];
@@ -736,24 +817,45 @@ nextQueue?.addEventListener("click", () => {
 
 async function playSlot(code, userInitiated = false){
   const rec = await dbGet(code);
-  if (!rec || !rec.blob) return;
+  if (!rec) return;
 
   const title = rec.title || titleFromFilename(rec.fileName || code);
   _pendingNowPlayingTitle = title;
   setNowPlayingText(title);
 
-  const url = URL.createObjectURL(rec.blob);
-  audioPlayer.src = url;
+  if (rec.blob){
+    const url = URL.createObjectURL(rec.blob);
+    audioPlayer.src = url;
 
-  try{
-    if (userInitiated) await audioPlayer.play();
-    else audioPlayer.play().catch(()=>{});
-  }catch(_){
-    _pendingNowPlayingTitle = null;
-}
+    try{
+      if (userInitiated) await audioPlayer.play();
+      else audioPlayer.play().catch(()=>{});
+    }catch(_){
+      _pendingNowPlayingTitle = null;
+    }
 
-  setTimeout(() => URL.revokeObjectURL(url), 30_000);
-  updatePlayingNext();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    updatePlayingNext();
+    return;
+  }
+
+  if (rec.song_id){
+    try{
+      const res = await authFetch(`/api/r2-play-url?songId=${encodeURIComponent(rec.song_id)}`);
+      if (!res.ok) throw new Error(`Play URL failed (${res.status})`);
+      const payload = await readJsonSafe(res);
+      if (!payload?.url) throw new Error("Missing play URL");
+      audioPlayer.src = payload.url;
+      if (userInitiated) await audioPlayer.play();
+      else audioPlayer.play().catch(()=>{});
+      updatePlayingNext();
+      return;
+    }catch(err){
+      console.warn("Cloud playback failed", err);
+      setCloudStatus(err?.message || "Cloud playback failed", "error");
+      _pendingNowPlayingTitle = null;
+    }
+  }
 }
 
 
@@ -944,6 +1046,7 @@ clearAllBtn?.addEventListener("click", async () => {
   buildKeys();
   bindPaging();
   await initClerkAuth();
+  await autoSignInAndLoadLibrary();
 
   const params = new URLSearchParams(window.location.search);
   if (params.has("debug") || params.get("debug") === "1" || params.has("hotspots")) {

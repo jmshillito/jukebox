@@ -259,6 +259,8 @@ body{
   .keypad{
     transform: translate(-7px, -32px);
   }
+  .playing-next-window .pn-left{ left: -15px; }
+  .playing-next-window .pn-right{ right: -25px; }
   .rolodex{
     transform: translateY(-8px);
   }

@@ -218,12 +218,14 @@ body{
 .stage{
   position: relative;
   width: min(720px, 100vw);
-  height: 100vh;
+  aspect-ratio: 9 / 16;
+  height: auto;
+  max-height: 100vh;
   margin: 0 auto;
 }
 .jukebox-img{
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   position: relative;
   z-index: 0;
@@ -775,6 +777,8 @@ body.debug-hotspots #dial::before{
   white-space: nowrap;
   text-shadow: 0 2px 6px rgba(0,0,0,0.7);
   padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Clerk auth UI */
@@ -837,6 +841,20 @@ body.auth-required .auth-ui{
 #transportStop{ left: var(--transport-stop-left); width: var(--transport-stop-w); }
 #transportNext{ left: var(--transport-next-left); width: var(--transport-next-w); }
 #nowPlayingText{ z-index: 10000 !important; position: relative; }
+.now-playing-text{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.marquee-text{
+  animation: marquee-text 8s linear infinite;
+  text-overflow: clip;
+}
+@keyframes marquee-text{
+  0%{ transform: translateX(0); }
+  100%{ transform: translateX(calc(-100% + 120px)); }
+}
 
 
 

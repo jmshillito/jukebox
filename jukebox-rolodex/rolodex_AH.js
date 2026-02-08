@@ -362,6 +362,7 @@ function setNowPlayingText(text){
 
   if (direct){
     direct.textContent = value;
+    applyTextMarquee(direct);
     return;
   }
 
@@ -532,6 +533,15 @@ function setPlayingNextText(text){
   if (!playingNextText) return;
   const value = (text && String(text).trim()) ? String(text) : "—";
   playingNextText.textContent = value;
+  applyTextMarquee(playingNextText);
+}
+
+function applyTextMarquee(el){
+  if (!el) return;
+  el.classList.remove("marquee-text");
+  if (el.scrollWidth > el.clientWidth + 4){
+    el.classList.add("marquee-text");
+  }
 }
 
 function updatePlayingNext(){

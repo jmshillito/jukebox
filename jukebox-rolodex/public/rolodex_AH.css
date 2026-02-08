@@ -761,6 +761,22 @@ body.debug-hotspots #dial::before{
 .nowplaying .nav-btn{
   pointer-events: auto;
 }
+.debug-overlay .nowplaying{
+  outline: 2px solid #00b7ff;
+  background: rgba(0,183,255,0.12);
+}
+.debug-overlay .nowplaying .nav-btn{
+  outline: 2px solid #2fff71;
+  background: rgba(47,255,113,0.18);
+}
+.debug-overlay .playing-next-window{
+  outline: 2px solid #ff9f00;
+  background: rgba(255,159,0,0.12);
+}
+.debug-overlay .playing-next-window .pn-btn{
+  outline: 2px solid #ff3b81;
+  background: rgba(255,59,129,0.18);
+}
 
 /* Banner overlay that sits above the baked-in top row */
 .rolodex-banner{

@@ -1078,6 +1078,9 @@ clearAllBtn?.addEventListener("click", async () => {
   if (params.has("debug") || params.get("debug") === "1" || params.has("hotspots")) {
     document.body.classList.add("debug-hotspots");
   }
+  if (params.get("overlay") === "1") {
+    document.body.classList.add("debug-overlay");
+  }
 
   // Toggle hotspot outlines for alignment: press "d"
   window.addEventListener("keydown", (e) => {

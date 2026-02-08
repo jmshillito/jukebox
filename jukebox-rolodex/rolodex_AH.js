@@ -113,7 +113,12 @@ async function initClerkAuth(){
       window.Clerk.mountUserButton(clerkUserButton);
       return;
     }
-    if (clerkSignIn) window.Clerk.mountSignIn(clerkSignIn);
+    if (clerkSignIn) {
+      window.Clerk.mountSignIn(clerkSignIn, {
+        afterSignInUrl: window.location.href,
+        afterSignUpUrl: window.location.href,
+      });
+    }
   };
 
   render();
@@ -130,10 +135,22 @@ async function autoSignInAndLoadLibrary(){
     if (!window.Clerk?.user || synced) return;
     synced = true;
     document.body.classList.remove("auth-required");
+    try { sessionStorage.removeItem("clerk_auto_redirected"); } catch(_) {}
     await syncCloudLibraryToLocal();
   };
 
   if (!window.Clerk?.user){
+    let redirected = false;
+    try { redirected = sessionStorage.getItem("clerk_auto_redirected") === "1"; } catch(_) {}
+    if (!redirected && typeof window.Clerk?.redirectToSignIn === "function"){
+      try{
+        sessionStorage.setItem("clerk_auto_redirected", "1");
+        window.Clerk.redirectToSignIn({ redirectUrl: window.location.href });
+        return;
+      }catch(_){
+        // If redirect fails, fall back to inline sign-in UI.
+      }
+    }
     document.body.classList.add("auth-required");
     if (clerkSignIn) {
       clerkSignIn.scrollIntoView({ behavior: "smooth", block: "center" });

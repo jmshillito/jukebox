@@ -217,8 +217,8 @@ body{
 ------------------------------------------------------------ */
 .stage{
   position: relative;
-  width: min(720px, 100vw);
-  aspect-ratio: 9 / 16;
+  width: min(720px, 100vw, calc(100vh * 1024 / 1425));
+  aspect-ratio: 1024 / 1425;
   height: auto;
   max-height: 100vh;
   margin: 0 auto;
@@ -481,9 +481,9 @@ body{
   --np-text-y: -6px;
 
   /* Playing Next text placement (inside the window) */
-  --pn-left: 18.0%;
+  --pn-left: 24.0%;
   --pn-top: 88.9%;
-  --pn-w: 63.0%;
+  --pn-w: 52.0%;
   --pn-h: 7.5%;
 
   /* Card banner (covers the baked-in top row) */

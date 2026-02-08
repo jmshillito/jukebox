@@ -253,6 +253,8 @@ body{
     /* ↓ tune these two values only */
     --overlay-shift-x: -15px; /* move LEFT */
     --overlay-shift-y: 13px;  /* move DOWN */
+    --keypad-top: 55.6%;
+    --keypad-left: 9.7%;
   }
   .rolodex{
     transform: translateY(-8px);

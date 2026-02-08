@@ -259,8 +259,17 @@ body{
   .keypad{
     transform: translate(-7px, -32px);
   }
-  .playing-next-window .pn-left{ left: -15px; }
-  .playing-next-window .pn-right{ right: -25px; }
+  .playing-next-window{
+    overflow: visible;
+  }
+  .playing-next-window .pn-left{
+    left: 0 !important;
+    transform: translateX(-15px);
+  }
+  .playing-next-window .pn-right{
+    right: 0 !important;
+    transform: translateX(25px);
+  }
   .rolodex{
     transform: translateY(-8px);
   }

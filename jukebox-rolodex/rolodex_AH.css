@@ -777,6 +777,26 @@ body.auth-required .auth-ui{
   transform: translate(-50%, -50%);
 }
 
+/* Login overlay button */
+.login-btn{
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  transform: translateX(-50%);
+  z-index: 11000;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.login-btn.hidden{
+  display: none;
+}
+
 /* Transport controls */
 .transport{
   position: absolute;

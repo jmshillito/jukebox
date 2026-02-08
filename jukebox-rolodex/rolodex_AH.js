@@ -98,6 +98,7 @@ const clearAllBtn = document.getElementById("clearAll");
 const audioPlayer = document.getElementById("audioPlayer");
 const clerkUserButton = document.getElementById("clerk-user-button");
 const clerkSignIn = document.getElementById("clerk-signin");
+const loginBtn = document.getElementById("loginBtn");
 
 
 async function initClerkAuth(){
@@ -108,6 +109,7 @@ async function initClerkAuth(){
   const render = () => {
     if (clerkUserButton) clerkUserButton.replaceChildren();
     if (clerkSignIn) clerkSignIn.replaceChildren();
+    if (loginBtn) loginBtn.classList.toggle("hidden", !!window.Clerk.user);
 
     if (window.Clerk.user && clerkUserButton){
       window.Clerk.mountUserButton(clerkUserButton);
@@ -781,6 +783,19 @@ addPressListener(transportNext, async () => {
   playClickSound();
   // Pause (rightmost button)
   audioPlayer?.pause();
+});
+
+addPressListener(loginBtn, async () => {
+  await waitForClerk();
+  if (!window.Clerk) return;
+  try { await window.Clerk.load(); } catch(_) {}
+  if (window.Clerk?.user){
+    await syncCloudLibraryToLocal();
+    return;
+  }
+  if (typeof window.Clerk?.redirectToSignIn === "function"){
+    window.Clerk.redirectToSignIn({ redirectUrl: window.location.href });
+  }
 });
 
 

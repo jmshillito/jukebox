@@ -101,6 +101,7 @@ const clerkSignIn = document.getElementById("clerk-signin");
 
 
 async function initClerkAuth(){
+  await waitForClerk();
   if (!window.Clerk) return;
   await window.Clerk.load();
 
@@ -120,6 +121,7 @@ async function initClerkAuth(){
 }
 
 async function autoSignInAndLoadLibrary(){
+  await waitForClerk();
   if (!window.Clerk) return;
   try { await window.Clerk.load(); } catch(_) {}
 
@@ -163,6 +165,15 @@ async function readJsonSafe(res){
   }catch(_){
     return null;
   }
+}
+
+async function waitForClerk(timeoutMs = 5000){
+  if (window.Clerk) return true;
+  const started = Date.now();
+  while (!window.Clerk && (Date.now() - started) < timeoutMs){
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return !!window.Clerk;
 }
 
 function ensureCloudStatusEl(){

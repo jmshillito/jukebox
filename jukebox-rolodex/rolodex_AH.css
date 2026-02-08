@@ -848,13 +848,17 @@ body.auth-required .auth-ui{
   text-overflow: ellipsis;
   width: 100%;
 }
+.marquee-span{
+  display: inline-block;
+  white-space: nowrap;
+}
 .marquee-text{
-  animation: marquee-text 8s linear infinite;
-  text-overflow: clip;
+  padding-left: 100%;
+  animation: marquee-text 10s linear infinite;
 }
 @keyframes marquee-text{
   0%{ transform: translateX(0); }
-  100%{ transform: translateX(calc(-100% + 120px)); }
+  100%{ transform: translateX(-100%); }
 }
 
 

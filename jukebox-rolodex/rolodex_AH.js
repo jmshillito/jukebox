@@ -1088,8 +1088,9 @@ clearAllBtn?.addEventListener("click", async () => {
 (async function init(){
   buildKeys();
   bindPaging();
-  await initClerkAuth();
-  await autoSignInAndLoadLibrary();
+  // Don't block core UI on auth; Clerk can hang on misconfigured domains.
+  initClerkAuth().catch(()=>{});
+  autoSignInAndLoadLibrary().catch(()=>{});
 
   const params = new URLSearchParams(window.location.search);
   if (params.has("debug") || params.get("debug") === "1" || params.has("hotspots")) {
@@ -1120,7 +1121,11 @@ audioPlayer?.addEventListener("ended", async () => {
 
 
   pages = makeEmptyPages();
-  await refreshPagesFromDB();
+  try{
+    await refreshPagesFromDB();
+  }catch(_){
+    // If IndexedDB fails, render empty pages so UI still works.
+  }
   renderCurrent();
   ensureNowPlayingEl();
   setNowPlayingConfirmed("—");

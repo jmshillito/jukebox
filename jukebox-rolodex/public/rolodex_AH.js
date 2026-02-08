@@ -505,8 +505,20 @@ function renderPage(el, pageSongs){
       </div>
     </div>
   `;
+  requestAnimationFrame(() => applyTitleMarquee(el));
 }
 function renderCurrent(){ renderPage(front, pages[pageIndex]); }
+
+function applyTitleMarquee(scope){
+  if (!scope) return;
+  const titles = scope.querySelectorAll(".song-title");
+  titles.forEach((title) => {
+    title.classList.remove("marquee");
+    if (title.scrollWidth > title.clientWidth + 4){
+      title.classList.add("marquee");
+    }
+  });
+}
 
 /* Flip */
 function flipToPage(newIndex){

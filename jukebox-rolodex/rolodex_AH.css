@@ -379,7 +379,24 @@ body{
   text-align:center;
   font-size: 14px;
 }
-.song-title{ font-weight: 800; line-height: 1.1; font-size: 13.5px; }
+.song-title{
+  font-weight: 800;
+  line-height: 1.1;
+  font-size: clamp(10px, 1.6vw, 13.5px);
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.song-title.marquee{
+  animation: song-title-marquee 8s linear infinite;
+  text-overflow: clip;
+}
+@keyframes song-title-marquee{
+  0%{ transform: translateX(0); }
+  100%{ transform: translateX(calc(-100% + 140px)); }
+}
 
 /* Keypad hotspots */
 .keypad{
@@ -777,20 +794,6 @@ body.auth-required .auth-ui{
   transform: translate(-50%, -50%);
 }
 
-.build-tag{
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 12000;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #fff;
-  background: rgba(0,0,0,0.65);
-  padding: 4px 8px;
-  border-radius: 8px;
-  pointer-events: none;
-}
 
 /* Login overlay button */
 .login-btn{
